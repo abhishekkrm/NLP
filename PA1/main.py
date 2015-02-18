@@ -1,9 +1,9 @@
 import os
-import Parser
+from Parser import Parser
 import NGramModel
 import Classifier
 import RandomSentenceGenerator
-import Smoother
+#import Smoother
 
 this_file_path = os.path.dirname(os.path.realpath( __file__)) 
 
@@ -13,6 +13,7 @@ class Controller(object):
     
     def __init__(self, training_file, validation_file, test_file):
         self.__up_train = Parser(training_file, Controller.UP_LABEL).get_parsed_content()
+        #print(self.__up_train)
         self.__down_train = Parser(training_file, Controller.DOWN_LABEL).get_parsed_content()
         self.__up_validation = Parser(validation_file, Controller.UP_LABEL).get_parsed_content()
         self.__down_validation = Parser(validation_file, Controller.DOWN_LABEL).get_parsed_content()
@@ -26,6 +27,7 @@ class Controller(object):
     
 def main():
     training_file = os.path.join(this_file_path, 'training.txt')
+   
     validation_file = os.path.join(this_file_path, 'validation.txt')
     test_file = os.path.join(this_file_path, 'test.txt')
     
