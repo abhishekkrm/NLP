@@ -51,7 +51,7 @@ class Parser(object):
     def get_parsed_content(self):
         """Returns a string which contains all parsed mails concatenated.
         """
-        return "".join(self.__list_of_mails)
+        return " ".join(self.__list_of_mails)
     
     def get_parsed_mails(self):
         """Returns a list of mails.
