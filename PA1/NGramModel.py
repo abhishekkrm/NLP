@@ -1,7 +1,7 @@
 # Ref: http://stackoverflow.com/questions/12488722/counting-bigrams-pair-of-two-words-in-a-file-using-python
 from itertools import tee, islice
 from collections import Counter
-
+import math
 class NGramModel(object):
     START_SENTENCE_TOKEN = '<start>'
     END_SENTENCE_TOKEN = '</start>'
@@ -41,6 +41,27 @@ class NGramModel(object):
         """ Calculates the probability of this mail according to this model.
             Uses the smoother for smoothing. Note that it can be None for Unsmoothed ngrams
         """
+        start_token = ' '.join([NGramModel.START_SENTENCE_TOKEN]*(self.__n-1));
+        sentences = unseen_mail.replace(NGramModel.START_SENTENCE_TOKEN, start_token).split(NGramModel.END_SENTENCE_TOKEN)
+        logProb = 0;
+        for sentence in sentences:
+            word_list = sentence.split()
+            word_list.append(NGramModel.END_SENTENCE_TOKEN)
+            
+            for ngram in self.__generate_n_grams(word_list, self.__n):
+                history = ngram[0:self.__n-1]
+                sequence = " ".join(ngram)
+                hist_seq = " ".join(history)
+                if self.__smoother is not None:
+                    prob = self.__smoother.calculate_probability(self,sequence)
+                    logProb+=math.log10(prob)
+                else:                
+                    numerator = self.__ngram_counts[self.__n].get(" ".join(sequence),0)
+                    denominator = self.__ngram_counts[self.__n-1].get(" ".join(hist_seq),0);
+                    if(numerator==0 or denominator ==0):
+                        return 0;
+                    logProb+=math.log10(numerator/denominator);
+        return logProb
         pass
     
     def get_n(self):

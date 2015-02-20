@@ -69,6 +69,12 @@ class Controller(object):
             for _ in range(5):
                 print(down_train_random_sentence_generator.generate_sentence())
     
+    def calculate_unseen_email_probability(self):
+        #It is hard-coded to run for trigrams
+        classifier = Classifier.Classifier(self.__up_train_ngram_models[3],self.__down_train_ngram_models[3])
+        print('calculate_unseen_email_probability')
+        for mail in self.__updown_test.get_parsed_mails():
+            classifier.classify_mail(mail)
     
 def main():
     training_file = os.path.join(this_file_path, 'training.txt')
@@ -84,6 +90,8 @@ def main():
     controller.generate_random_sentences()
     #part 2.4 and 2.5
     controller.compute_perplexities()
+	#Calculate UP/DOWN probability of unseen emails
+    controller.calculate_unseen_email_probability()
     
 
 if __name__ == "__main__":
