@@ -1,6 +1,6 @@
 import abc
 
-class ISmoother(metacalss=abc.ABCMeta):
+class ISmoother(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def calculate_probability(self, counts, N, word_sequence):
         pass
