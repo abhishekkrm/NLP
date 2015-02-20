@@ -1,36 +1,15 @@
-def parseEmail(content,lowerCase=True,removePunctuation=True,removeNewline=True):
-    """ Turns the content of an email into a tokenized sentences of the form:
-	<s> a tokenized sentence (possibly a non-sentence) </s> <s> a tokenized sentence (possibly a non-sentence) </s>
-    """
-    content = content.strip();
-    splt = content.split(". ");
-    str = "";
-    for i in range(0,len(splt)):
-        if bool(splt[i].strip()):
-            str+=" <s> "+splt[i].strip()+" </s>"
-            'print(splt[i].strip())'
-    if removeNewline:
-        str=str.replace("\n"," ")
-    if lowerCase:
-        str=str.lower()
-    if removePunctuation:
-        str=str.replace(",","")
-        str=str.replace(";","")
-        str=str.replace("!","")	
-        str=str.replace("?","")
-        str=str.replace("\"","")
-        str=str.replace("(","")
-        str=str.replace(")","")
-    # Remove tabs
-    str=str.replace("\t"," ")
-    # Remove double and triple spaces
-    str=str.replace("  "," ")
-    str=str.replace("  "," ")
-    return str;
+from nltk import tokenize
+from nltk.tokenize import RegexpTokenizer
+import NGramModel
 
 class Parser(object):
-    def __init__(self, content_file, label = None):
+    def __init__(self, content_file, label = None, remove_punctuation = True, lowercase = True):
         self.__list_of_mails = []
+        self.__lowercase = lowercase
+        if remove_punctuation:
+            self.__tokenizer = RegexpTokenizer(r'\w+').tokenize
+        else:
+            self.__tokenizer = tokenize.wordpunct_tokenize
         self.__parse_file(content_file, label)
     
     def __parse_file(self, content_file, label):
@@ -44,16 +23,30 @@ class Parser(object):
             for currentLine in lines:
                 if currentLine[:-1]==label or label==None:
                         toBeParsed=True	
-                elif currentLine=='**START**\n':
+                if currentLine=='**START**\n':
                         currentEmail=""
                 elif currentLine=='**EOM**\n':
                         if toBeParsed:
-                            self.__list_of_mails.append(parseEmail(currentEmail))
+                            self.__list_of_mails.append(self.__parse_email(currentEmail))
                         toBeParsed=False
                 else:
                         currentEmail+=currentLine
 
-        pass
+    def __parse_email(self, email):
+        if self.__lowercase:
+            email = email.lower()
+        sentences = tokenize.sent_tokenize(email)
+        parsed_mail = []
+        for sentence in sentences:
+            tokens = self.__tokenizer(sentence)
+            if len(tokens) > 0:
+                self.__add_start_end_sentence_token(tokens)
+                parsed_mail = parsed_mail + tokens 
+        return ' '.join(parsed_mail)
+        
+    def __add_start_end_sentence_token(self, tokens):
+        tokens.insert(0, NGramModel.NGramModel.START_SENTENCE_TOKEN)
+        tokens.append(NGramModel.NGramModel.END_SENTENCE_TOKEN)
     
     def get_parsed_content(self):
         """Returns a string which contains all parsed mails concatenated.
@@ -65,5 +58,3 @@ class Parser(object):
         """
         return self.__list_of_mails
 
-
-    
