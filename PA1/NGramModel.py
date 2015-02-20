@@ -49,4 +49,10 @@ class NGramModel(object):
     def get_counts(self):
         return self.__ngram_counts
     
+    def get_num_tokens(self):
+        return sum(self.__ngram_counts[1].values())
+    
+    def get_vocab_size(self):
+        return len(self.__ngram_counts[1]) + 1 #for <start>
+    
     
