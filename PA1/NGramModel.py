@@ -1,9 +1,13 @@
+# Ref: http://stackoverflow.com/questions/12488722/counting-bigrams-pair-of-two-words-in-a-file-using-python
+from itertools import tee, islice
+from collections import Counter
 
-from nltk.util import ngrams
 class NGramModel(object):
+    START_SENTENCE_TOKEN = '<start>'
+    END_SENTENCE_TOKEN = '</start>'
+
     def __init__(self, corpus, N, smoother = None):
         self.__ngram_counts = {}
-        self.__nMinusOnegram_counts={}
         self.__n = N
         self.__smoother = smoother
         self.__parse_corpus(corpus)
@@ -11,27 +15,34 @@ class NGramModel(object):
     def __parse_corpus(self, corpus):
         """ Parses the corpus and populates the counts table
         """
-        allNgrams = ngrams(corpus.split(), self.__n)
-
-	# Count the ngrams
-        for grams in allNgrams:
-            if grams in self.__ngram_counts:
-                self.__ngram_counts[grams]=self.__ngram_counts[grams]+1
+        word_list = corpus.split() 
+        for n in range(1, self.__n+1):
+            self.__ngram_counts[n] = {}
+            for ngram, count in Counter(self.__generate_n_grams(word_list, n)).items():
+                self.__ngram_counts[n][' '.join(ngram)] = count
+    
+    def __generate_n_grams(self, word_list, n):
+        local_word_list = word_list
+        while True:
+            iter1, iter2 = tee(local_word_list)
+            ngram = tuple(islice(iter1, n))
+            if len(ngram) == n:
+                yield ngram
+                next(iter2)
+                local_word_list = iter2
             else:
-                self.__ngram_counts[grams]=1
-	# Count the (n-1)grams if n>1
-        if self.__n>1:
-            allNgrams = ngrams(corpus.split(), self.__n-1)
-            for grams in allNgrams:
-                if grams in self.__nMinusOnegram_counts:
-                    self.__nMinusOnegram_counts[grams]=self.__nMinusOnegram_counts[grams]+1
-                else:
-                    self.__nMinusOnegram_counts[grams]=1
-        pass
+                break
     
     def calculate_probability(self, unseen_mail):       
         """ Calculates the probability of this mail according to this model.
             Uses the smoother for smoothing. Note that it can be None for Unsmoothed ngrams
         """
-
         pass
+    
+    def get_n(self):
+        return self.__n
+    
+    def get_counts(self):
+        return self.__ngram_counts
+    
+    
