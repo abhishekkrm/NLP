@@ -15,11 +15,15 @@ class NGramModel(object):
     def __parse_corpus(self, corpus):
         """ Parses the corpus and populates the counts table
         """
-        word_list = corpus.split() 
         for n in range(1, self.__n+1):
+            start_token = ' '.join([NGramModel.START_SENTENCE_TOKEN]*n)
+            word_list = corpus.replace(NGramModel.START_SENTENCE_TOKEN, start_token).split()
+            
             self.__ngram_counts[n] = {}
             for ngram, count in Counter(self.__generate_n_grams(word_list, n)).items():
                 self.__ngram_counts[n][' '.join(ngram)] = count
+            
+            self.__ngram_counts[n].pop(start_token, None)
     
     def __generate_n_grams(self, word_list, n):
         local_word_list = word_list
