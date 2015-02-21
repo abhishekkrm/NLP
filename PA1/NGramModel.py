@@ -2,11 +2,16 @@
 from itertools import tee, islice
 from collections import Counter
 import math
+import re
+import Smoother
+
 class NGramModel(object):
     START_SENTENCE_TOKEN = '<start>'
     END_SENTENCE_TOKEN = '</start>'
-
-    def __init__(self, corpus, N, smoother = None):
+    UNKNOWN_WORD_TOKEN = '<unk>'
+    UNKNOWN_THRESHOLD = 5
+    
+    def __init__(self, corpus, N, smoother = Smoother.UnSmoother()):
         self.__ngram_counts = {}
         self.__n = N
         self.__smoother = smoother
@@ -15,15 +20,28 @@ class NGramModel(object):
     def __parse_corpus(self, corpus):
         """ Parses the corpus and populates the counts table
         """
-        for n in range(1, self.__n+1):
-            start_token = ' '.join([NGramModel.START_SENTENCE_TOKEN]*n)
-            word_list = corpus.replace(NGramModel.START_SENTENCE_TOKEN, start_token).split()
+        corpus = self.__handle_corpus_unkwon_words(corpus)
+        start_token = ' '.join([NGramModel.START_SENTENCE_TOKEN]*(self.__n-1))
+        word_list = corpus.replace(NGramModel.START_SENTENCE_TOKEN, start_token).split()
             
+        for n in range(1, self.__n+1):    
             self.__ngram_counts[n] = {}
             for ngram, count in Counter(self.__generate_n_grams(word_list, n)).items():
                 self.__ngram_counts[n][' '.join(ngram)] = count
-            
-            self.__ngram_counts[n].pop(start_token, None)
+    
+    def __handle_corpus_unkwon_words(self, corpus):
+        if self.__smoother.handle_unknown_words():
+            for word, count in Counter(corpus.split()).items():
+                if count < NGramModel.UNKNOWN_THRESHOLD:
+                    corpus = re.sub(r'\b' + word + r'\b', NGramModel.UNKNOWN_WORD_TOKEN, corpus)
+        return corpus
+    
+    def __handle_unseen_mail_unknown_words(self, unseen_mail):
+        if self.__smoother.handle_unknown_words():
+            for word in unseen_mail.split():
+                if word not in self.__ngram_counts[1]:
+                    unseen_mail = re.sub(r'\b' + word + r'\b', NGramModel.UNKNOWN_WORD_TOKEN, unseen_mail)
+        return unseen_mail
     
     def __generate_n_grams(self, word_list, n):
         local_word_list = word_list
@@ -41,28 +59,23 @@ class NGramModel(object):
         """ Calculates the probability of this mail according to this model.
             Uses the smoother for smoothing. Note that it can be None for Unsmoothed ngrams
         """
+        unseen_mail = self.__handle_unseen_mail_unknown_words(unseen_mail)
+        
         start_token = ' '.join([NGramModel.START_SENTENCE_TOKEN]*(self.__n-1));
         sentences = unseen_mail.replace(NGramModel.START_SENTENCE_TOKEN, start_token).split(NGramModel.END_SENTENCE_TOKEN)
-        logProb = 0;
+        
+        log_probability = 0;
         for sentence in sentences:
             word_list = sentence.split()
             word_list.append(NGramModel.END_SENTENCE_TOKEN)
             
             for ngram in self.__generate_n_grams(word_list, self.__n):
-                history = ngram[0:self.__n-1]
-                sequence = " ".join(ngram)
-                hist_seq = " ".join(history)
-                if self.__smoother is not None:
-                    prob = self.__smoother.calculate_probability(self,sequence)
-                    logProb+=math.log10(prob)
-                else:                
-                    numerator = self.__ngram_counts[self.__n].get(" ".join(sequence),0)
-                    denominator = self.__ngram_counts[self.__n-1].get(" ".join(hist_seq),0);
-                    if(numerator==0 or denominator ==0):
-                        return 0;
-                    logProb+=math.log10(numerator/denominator);
-        return logProb
-        pass
+                probability = self.__smoother.calculate_probability(self, ' '.join(ngram))
+                if probability == 0:
+                    return 0
+                log_probability += math.log10(probability)
+        
+        return log_probability
     
     def get_n(self):
         return self.__n
@@ -71,9 +84,9 @@ class NGramModel(object):
         return self.__ngram_counts
     
     def get_num_tokens(self):
-        return sum(self.__ngram_counts[1].values())
+        return sum(self.__ngram_counts[1].values()) - self.__ngram_counts[1].get(NGramModel.START_SENTENCE_TOKEN, 0)
     
     def get_vocab_size(self):
-        return len(self.__ngram_counts[1]) + 1 #for <start>
+        return len(self.__ngram_counts[1])
     
     

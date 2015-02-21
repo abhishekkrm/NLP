@@ -11,7 +11,7 @@ class Parser(object):
         else:
             self.__tokenizer = tokenize.wordpunct_tokenize
         self.__parse_file(content_file, label)
-    	
+
     def __parse_file(self, content_file, label):
         """ Should parse the content_file and read only mails makred by *label*
             If label is None, it should read every mail
