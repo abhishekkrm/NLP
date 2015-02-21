@@ -3,6 +3,9 @@ from nltk.tokenize import RegexpTokenizer
 import NGramModel
 
 class Parser(object):
+    UP_LABEL = 'UPSPEAK'
+    DOWN_LABEL = 'DOWNSPEAK'
+    
     def __init__(self, content_file, label = None, remove_punctuation = True, lowercase = True):
         self.__list_of_mails = []
         self.__lowercase = lowercase
@@ -21,16 +24,19 @@ class Parser(object):
             currentEmail=""
             toBeParsed=False
             for currentLine in lines:
-                if currentLine[:-1]==label or label==None:
-                        toBeParsed=True	
-                if currentLine=='**START**\n':
-                        currentEmail=""
-                elif currentLine=='**EOM**\n':
-                        if toBeParsed:
-                            self.__list_of_mails.append(self.__parse_email(currentEmail))
-                        toBeParsed=False
+                currentLine = currentLine.strip()
+                if currentLine == Parser.UP_LABEL or currentLine == Parser.DOWN_LABEL:
+                    if currentLine == label:
+                        toBeParsed=True
+                        continue	
+                if currentLine=='**START**':
+                    currentEmail=""
+                elif currentLine=='**EOM**':
+                    if toBeParsed or label == None:
+                        self.__list_of_mails.append(self.__parse_email(currentEmail))
+                    toBeParsed=False
                 else:
-                        currentEmail+=currentLine
+                    currentEmail+=currentLine
 
     def __parse_email(self, email):
         if self.__lowercase:

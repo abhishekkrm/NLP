@@ -19,7 +19,7 @@ class UnSmoother(ISmoother):
         history = ' '.join(word_sequence.split()[0:N-1])
         
         numerator = model.get_counts()[N].get(word_sequence, 0)
-        denominator = model.get_counts()[N-1].get(history, 0)
+        denominator = model.get_counts().get(N-1, {'':model.get_num_tokens()}).get(history, 0)
         
         if numerator==0 or denominator ==0:
             return 0
@@ -51,7 +51,13 @@ class BackoffSmoother(ISmoother):
         self.__D = D
         self.__delta=delta
 
-    def calculate_probability(self, counts, N, word_sequence):
+    def handle_unknown_words(self):
+        return True
+    
+    def calculate_probability(self, model, word_sequence):
+        return self.__calculate_probability(model.get_counts(), model.get_n(), word_sequence)
+    
+    def __calculate_probability(self, counts, N, word_sequence):
         history = ' '.join(word_sequence.split()[0:N-1])
         size_of_vocab = len(counts[1])
         num_tokens = sum(counts[1].values())
@@ -66,8 +72,8 @@ class BackoffSmoother(ISmoother):
             return (counts[N].get(word_sequence)-self.__D)/(counts[N-1].get(history))
         else:
             history2=' '.join(history.split()[1:N-1])
-            Wi=word_sequence.split()[N]
-            Pkatz = self.calculate_probability(counts,N-1,history2+' '+Wi)
+            Wi=word_sequence.split()[N-1]
+            Pkatz = self.__calculate_probability(counts,N-1,history2+' '+Wi)
             # Compute alpha
             numerator=self.__D
             denominator=0
@@ -75,7 +81,8 @@ class BackoffSmoother(ISmoother):
             for unigram in counts[1]:
                 s=history+' '+unigram
                 if s not in counts[N]:
-                    denominator+=self.calculate_probability(counts,N-1,history2+' '+unigram)
-            return numerator/denominator
+                    denominator+=self.__calculate_probability(counts,N-1,history2+' '+unigram)
+            alpha = numerator/denominator
+            return Pkatz*alpha 
             
     

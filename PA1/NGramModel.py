@@ -2,14 +2,13 @@
 from itertools import tee, islice
 from collections import Counter
 import math
-import re
 import Smoother
 
 class NGramModel(object):
     START_SENTENCE_TOKEN = '<start>'
     END_SENTENCE_TOKEN = '</start>'
     UNKNOWN_WORD_TOKEN = '<unk>'
-    UNKNOWN_THRESHOLD = 5
+    UNKNOWN_THRESHOLD = 3
     
     def __init__(self, corpus, N, smoother = Smoother.UnSmoother()):
         self.__ngram_counts = {}
@@ -29,18 +28,35 @@ class NGramModel(object):
             for ngram, count in Counter(self.__generate_n_grams(word_list, n)).items():
                 self.__ngram_counts[n][' '.join(ngram)] = count
     
+    def __replace_unknown_words(self, word_list, unknown_word_list):
+        for i in range(0, len(word_list)):
+            if word_list[i] in unknown_word_list:
+                word_list[i] = NGramModel.UNKNOWN_WORD_TOKEN
+
     def __handle_corpus_unkwon_words(self, corpus):
         if self.__smoother.handle_unknown_words():
-            for word, count in Counter(corpus.split()).items():
+            word_list = corpus.split()
+            unknown_words = []
+            
+            for word, count in Counter(word_list).items():
                 if count < NGramModel.UNKNOWN_THRESHOLD:
-                    corpus = re.sub(r'\b' + word + r'\b', NGramModel.UNKNOWN_WORD_TOKEN, corpus)
+                    unknown_words.append(word)
+            self.__replace_unknown_words(word_list, unknown_words)        
+                   
+            return ' '.join(word_list)
         return corpus
     
     def __handle_unseen_mail_unknown_words(self, unseen_mail):
         if self.__smoother.handle_unknown_words():
-            for word in unseen_mail.split():
+            word_list = unseen_mail.split()
+            unknown_words = []
+            
+            for word in word_list:
                 if word not in self.__ngram_counts[1]:
-                    unseen_mail = re.sub(r'\b' + word + r'\b', NGramModel.UNKNOWN_WORD_TOKEN, unseen_mail)
+                    unknown_words.append(word)
+            self.__replace_unknown_words(word_list, unknown_words)
+                   
+            return ' '.join(word_list)
         return unseen_mail
     
     def __generate_n_grams(self, word_list, n):
@@ -66,15 +82,15 @@ class NGramModel(object):
         
         log_probability = 0;
         for sentence in sentences:
-            word_list = sentence.split()
-            word_list.append(NGramModel.END_SENTENCE_TOKEN)
+            if len(sentence.strip()) > 0:
+                word_list = sentence.split()
+                word_list.append(NGramModel.END_SENTENCE_TOKEN)
             
-            for ngram in self.__generate_n_grams(word_list, self.__n):
-                probability = self.__smoother.calculate_probability(self, ' '.join(ngram))
-                if probability == 0:
-                    return 0
-                log_probability += math.log10(probability)
-        
+                for ngram in self.__generate_n_grams(word_list, self.__n):
+                    probability = self.__smoother.calculate_probability(self, ' '.join(ngram))
+                    if probability == 0:
+                        return 0
+                    log_probability += math.log10(probability)
         return log_probability
     
     def get_n(self):

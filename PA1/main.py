@@ -1,5 +1,4 @@
 import os
-import math
 from Parser import Parser
 import NGramModel
 import Classifier
@@ -9,15 +8,12 @@ from RandomSentenceGenerator import RandomSentenceGenerator
 this_file_path = os.path.dirname(os.path.realpath( __file__)) 
 
 class Controller(object):
-    UP_LABEL = 'UPSPEAK'
-    DOWN_LABEL = 'DOWNSPEAK'
-    
-    def __init__(self, training_file, validation_file, test_file):
-        self.__up_train = Parser(training_file, Controller.UP_LABEL)
-        self.__down_train = Parser(training_file, Controller.DOWN_LABEL)
-        self.__up_validation = Parser(validation_file, Controller.UP_LABEL)
-        self.__down_validation = Parser(validation_file, Controller.DOWN_LABEL)
-        self.__updown_test = Parser(test_file)
+    def __init__(self, training_file, validation_file, test_file, remove_punctuation = True, lowercase = True):
+        self.__up_train = Parser(training_file, Parser.UP_LABEL, remove_punctuation, lowercase)
+        self.__down_train = Parser(training_file, Parser.DOWN_LABEL, remove_punctuation, lowercase)
+        self.__up_validation = Parser(validation_file, Parser.UP_LABEL, remove_punctuation, lowercase)
+        self.__down_validation = Parser(validation_file, Parser.DOWN_LABEL, remove_punctuation, lowercase)
+        self.__updown_test = Parser(test_file, remove_punctuation=remove_punctuation, lowercase=lowercase)
         
     def __generate_train_models(self, smoother):
         up_train_ngram_models = {}
@@ -57,10 +53,15 @@ class Controller(object):
                 print(down_train_random_sentence_generator.generate_sentence())
                 
     def compute_perplexity(self, dataset, model):
-        log_probability = model.calculate_probability(dataset.get_parsed_content())
-        probability = math.pow(10, log_probability)
-        num_tokens = model.get_num_tokens()
-        perplexity = pow( (1/probability), (1/num_tokens))
+        parsed_dataset = dataset.get_parsed_content()
+        parsed_dataset_words = parsed_dataset.split()
+        
+        log_probability = model.calculate_probability(parsed_dataset)
+        num_tokens = len(parsed_dataset_words) - parsed_dataset_words.count(NGramModel.NGramModel.START_SENTENCE_TOKEN)
+        
+        log_perplexity = -1*(1/num_tokens)*log_probability
+        perplexity = pow(10,log_perplexity) 
+        
         return perplexity
     
     def compute_perplexities(self):
@@ -73,36 +74,54 @@ class Controller(object):
             print('N = %d, UP_TRAIN, Perplexity = %f' %(n, up_validation_perplexity))
             print('N = %d, DOWN_TRAIN, Perplexity = %f' %(n, down_validation_perplexity))
             
-    def calculate_unseen_email_probability(self, output_file_name = 'kaggle.txt'):
-        #It is hard-coded to run for trigrams
-        up_train_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), 3)
-        down_train_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), 3)
+    def generate_kaggle_file_for_test_data(self, N, smoother, output_file_name = 'kaggle.txt'):
+        up_train_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother)
+        down_train_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother)
         
         classifier = Classifier.Classifier(up_train_model, down_train_model)
         
         with open(output_file_name, 'w') as output_file:
+            output_file.write('Id,Prediction\n')
             mail_id = 1
             for mail in self.__updown_test.get_parsed_mails():
                 output_file.write( '%d,%d\n' %(mail_id, classifier.classify_mail(mail)))
                 mail_id+=1
     
+    def count_correct_classification(self, up_model, down_model, dataset, actual_label):
+        num_correct_classified = 0
+        num_total_mails = len(dataset.get_parsed_mails())
+        classifier = Classifier.Classifier(up_model, down_model)
+        for mail in dataset.get_parsed_mails():
+            if classifier.classify_mail(mail) == actual_label:
+                num_correct_classified += 1
+        return num_total_mails, num_correct_classified
     
+    def validate_classifications(self, N, smoother):
+        train_up_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother)
+        train_down_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother)
+        up_total, up_correct = self.count_correct_classification(train_up_model, train_down_model, self.__up_validation, Classifier.Classifier.UP_SPEAK) 
+        down_total, down_correct = self.count_correct_classification(train_up_model, train_down_model, self.__down_validation, Classifier.Classifier.DOWN_SPEAK)
+        print('UPSPEAK Total = %d, Correct = %d, Percentage = %f' %(up_total, up_correct, (up_correct/up_total)*100))
+        print('DOWNSPEAK Total = %d, Correct = %d, Percentage = %f' %(down_total, down_correct, (down_correct/down_total)*100))
+        print('COMMULATIVE Total = %d, Correct = %d, Percentage = %f'%(up_total+down_total, up_correct+down_correct, ((up_correct+down_correct)/(up_total+down_total))*100))
+        
 def main():
     training_file = os.path.join(this_file_path, 'training.txt')
-   
     validation_file = os.path.join(this_file_path, 'validation.txt')
     test_file = os.path.join(this_file_path, 'test.txt')
     
-    #part 2.1
+    #part 2.1 - Default Controller with remove_punctuation and lowercase set to True
     controller = Controller(training_file, validation_file, test_file)
     #part2.2
     controller.generate_most_frequent_ngrams()
     #part 2.3
     controller.generate_random_sentences()
     #part 2.4 and 2.5
-    #controller.compute_perplexities()
-    #Calculate UP/DOWN probability of unseen emails
-    controller.calculate_unseen_email_probability()
+    controller.compute_perplexities()
+    #Generate Kaggle submission file
+    controller.generate_kaggle_file_for_test_data(3, Smoother.LaplaceSmoother())
+    #for verification purpose
+    controller.validate_classifications(3, Smoother.LaplaceSmoother())
     
 
 if __name__ == "__main__":
