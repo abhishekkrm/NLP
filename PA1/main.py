@@ -74,19 +74,30 @@ class Controller(object):
             print('N = %d, UP_TRAIN, Perplexity = %f' %(n, up_validation_perplexity))
             print('N = %d, DOWN_TRAIN, Perplexity = %f' %(n, down_validation_perplexity))
             
-    def generate_kaggle_file_for_test_data(self, N, smoother, output_file_name = 'kaggle.txt'):
+    def generate_kaggle_file_for_test_data(self, N, smoother, output_file_name = 'kaggle.csv'):
         up_train_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother)
         down_train_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother)
         
         classifier = Classifier.Classifier(up_train_model, down_train_model)
         
+        up_predicted = 0
+        down_predicted = 0
+        
         with open(output_file_name, 'w') as output_file:
             output_file.write('Id,Prediction\n')
             mail_id = 1
             for mail in self.__updown_test.get_parsed_mails():
-                output_file.write( '%d,%d\n' %(mail_id, classifier.classify_mail(mail)))
+                predicted_classification = classifier.classify_mail(mail)
+                output_file.write( '%d,%d\n' %(mail_id, predicted_classification))
+                
+                if predicted_classification == Classifier.Classifier.UP_SPEAK:  
+                    up_predicted+=1
+                if predicted_classification == Classifier.Classifier.DOWN_SPEAK:    
+                    down_predicted+=1
                 mail_id+=1
-    
+        #stats
+        print('Total Mails: %d, Up Classified = %d, Down Classified = %d' %(up_predicted + down_predicted, up_predicted, down_predicted))
+        
     def count_correct_classification(self, up_model, down_model, dataset, actual_label):
         num_correct_classified = 0
         num_total_mails = len(dataset.get_parsed_mails())
@@ -96,22 +107,35 @@ class Controller(object):
                 num_correct_classified += 1
         return num_total_mails, num_correct_classified
     
-    def validate_classifications(self, N, smoother):
-        train_up_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother)
-        train_down_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother)
+    def validate_classifications(self, N, smoother, unknown_threshold):
+        train_up_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother, unknown_threshold)
+        train_down_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother, unknown_threshold)
         up_total, up_correct = self.count_correct_classification(train_up_model, train_down_model, self.__up_validation, Classifier.Classifier.UP_SPEAK) 
         down_total, down_correct = self.count_correct_classification(train_up_model, train_down_model, self.__down_validation, Classifier.Classifier.DOWN_SPEAK)
         print('UPSPEAK Total = %d, Correct = %d, Percentage = %f' %(up_total, up_correct, (up_correct/up_total)*100))
         print('DOWNSPEAK Total = %d, Correct = %d, Percentage = %f' %(down_total, down_correct, (down_correct/down_total)*100))
         print('COMMULATIVE Total = %d, Correct = %d, Percentage = %f'%(up_total+down_total, up_correct+down_correct, ((up_correct+down_correct)/(up_total+down_total))*100))
+
         
+def validate_bulk(training_file, validation_file, test_file, smoother):
+    for remove_punctuation in (True, False):
+        for lowercase in (True, False):
+            controller = Controller(training_file, validation_file, test_file, remove_punctuation, lowercase)
+            for N in range(1, 6):
+                for unknown_threshold in range(2, 6):
+                    print('---------------------------------------------------------------------------------------')
+                    print('Remove Punctuation = %s, Lowewrcase = %s, N = %d, Unknown Threshold = %d, Smoother = %s' %(remove_punctuation, lowercase, N, unknown_threshold, smoother.__class__.__name__))
+                    controller.validate_classifications(N, smoother, unknown_threshold)
+                    print('---------------------------------------------------------------------------------------\n')
+
+
 def main():
     training_file = os.path.join(this_file_path, 'training.txt')
     validation_file = os.path.join(this_file_path, 'validation.txt')
     test_file = os.path.join(this_file_path, 'test.txt')
     
     #part 2.1 - Default Controller with remove_punctuation and lowercase set to True
-    controller = Controller(training_file, validation_file, test_file)
+    controller = Controller(training_file, validation_file, test_file, False, False)
     #part2.2
     controller.generate_most_frequent_ngrams()
     #part 2.3
@@ -121,7 +145,7 @@ def main():
     #Generate Kaggle submission file
     controller.generate_kaggle_file_for_test_data(3, Smoother.LaplaceSmoother())
     #for verification purpose
-    controller.validate_classifications(3, Smoother.LaplaceSmoother())
+    validate_bulk(training_file, validation_file, test_file, Smoother.LaplaceSmoother())
     
 
 if __name__ == "__main__":

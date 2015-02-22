@@ -8,12 +8,12 @@ class NGramModel(object):
     START_SENTENCE_TOKEN = '<start>'
     END_SENTENCE_TOKEN = '</start>'
     UNKNOWN_WORD_TOKEN = '<unk>'
-    UNKNOWN_THRESHOLD = 3
-    
-    def __init__(self, corpus, N, smoother = Smoother.UnSmoother()):
+        
+    def __init__(self, corpus, N, smoother = Smoother.UnSmoother(), unknown_threshold = 3):
         self.__ngram_counts = {}
         self.__n = N
         self.__smoother = smoother
+        self.__unknown_threshold = unknown_threshold
         self.__parse_corpus(corpus)
     
     def __parse_corpus(self, corpus):
@@ -39,7 +39,7 @@ class NGramModel(object):
             unknown_words = []
             
             for word, count in Counter(word_list).items():
-                if count < NGramModel.UNKNOWN_THRESHOLD:
+                if count < self.__unknown_threshold:
                     unknown_words.append(word)
             self.__replace_unknown_words(word_list, unknown_words)        
                    
