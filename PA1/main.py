@@ -74,9 +74,9 @@ class Controller(object):
             print('N = %d, UP_TRAIN, Perplexity = %f' %(n, up_validation_perplexity))
             print('N = %d, DOWN_TRAIN, Perplexity = %f' %(n, down_validation_perplexity))
             
-    def generate_kaggle_file_for_test_data(self, N, smoother, output_file_name = 'kaggle.csv'):
-        up_train_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother)
-        down_train_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother)
+    def generate_kaggle_file_for_test_data(self, N, smoother, unknown_threshold, output_file_name = 'kaggle.csv'):
+        up_train_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother, unknown_threshold)
+        down_train_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother, unknown_threshold)
         
         classifier = Classifier.Classifier(up_train_model, down_train_model)
         
@@ -143,7 +143,8 @@ def main():
     #part 2.4 and 2.5
     controller.compute_perplexities()
     #Generate Kaggle submission file
-    controller.generate_kaggle_file_for_test_data(3, Smoother.LaplaceSmoother())
+    controller.generate_kaggle_file_for_test_data(5, Smoother.SimpleGTSmoother(), 5)
+    #controller.validate_classifications(5, Smoother.SimpleGTSmoother(), 5)
     #for verification purpose
     validate_bulk(training_file, validation_file, test_file, Smoother.LaplaceSmoother())
     
