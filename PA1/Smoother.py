@@ -1,3 +1,8 @@
+#ref http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.lstsq.html
+#ref http://en.wikipedia.org/wiki/Good%E2%80%93Turing_frequency_estimation
+#ref https://github.com/maxbane/simplegoodturing/blob/master/sgt.py
+#ref http://www.d.umn.edu/~tpederse/Courses/CS8761-FALL02/Code/sgt-gale.pdf
+
 import abc
 import math
 import numpy as np
@@ -47,93 +52,119 @@ class LaplaceSmoother(ISmoother):
         
         return numerator/denominator
 
+
+class GTSmoother(ISmoother):
+    def __init__(self):
+        self.__frequency_popluated = False
+        self.__frequency_counts = {}
+        self.__num_ngrams_in_model = 0
+        
+    def __populate_frequencies(self, model):
+        self.__frequency_popluated = True
+        ngrams_counts_dict = model.get_counts()[model.get_n()]
+        for _, count in ngrams_counts_dict.items():
+            self.__frequency_counts[count] = self.__frequency_counts.get(count, 0) + 1
+            self.__num_ngrams_in_model += count
+    
+    def __get_adjusted_count(self, count):
+        if count == 0:
+            return self.__frequency_counts.get(1, 0)
+        return (count + 1)*(self.__frequency_counts.get(count+1, 0)/self.__frequency_counts.get(count, 1))
+    
+    def handle_unknown_words(self):
+        return True
+    
+    def calculate_probability(self, model, word_sequence):
+        if self.__frequency_popluated == False:
+            self.__populate_frequencies(model)
+        count_of_word_sequence = model.get_counts()[model.get_n()].get(word_sequence, 0)
+        return self.__get_adjusted_count(count_of_word_sequence)/self.__num_ngrams_in_model    
+    
+
 class SimpleGTSmoother(ISmoother):
-    def __init__(self, k = 5):
-        self.__k = k
-        self.__freq_populated = False
-        self.__freq_count = {} 
-        self.__gt_n = 0
-        self.__a = 0
-        self.__b = 0
+    def __init__(self):
+        self.__frequency_popluated = False
+        self.__frequency_counts = {}
+        self.__num_ngrams_in_model = 0
+        self.__smoothed_frequency_counts = {}
+        self.__smoothed_total = 0
+        
+    def __populate_frequencies(self, model):
+        self.__frequency_popluated = True
+        ngrams_counts_dict = model.get_counts()[model.get_n()]
+        for _, count in ngrams_counts_dict.items():
+            self.__frequency_counts[count] = self.__frequency_counts.get(count, 0) + 1
+            self.__num_ngrams_in_model += count
+        
+        a, b = self.__fit_log_linear_regression()
+        self.__compute_smoothed_counts(a, b)
+                
+    def __fit_log_linear_regression(self):
+        sorted_frequencies = sorted(self.__frequency_counts)
+        
+        Z = {}
+        for r in range(len(sorted_frequencies)):
+            if r == 0:
+                q = 0
+            else:
+                q = sorted_frequencies[r-1]
+                
+            if r == len(sorted_frequencies)-1:
+                t = 2*sorted_frequencies[r] - q
+            else:
+                t = sorted_frequencies[r+1]
+            
+            Z[sorted_frequencies[r]] = self.__frequency_counts[sorted_frequencies[r]] / (0.5 * (t - q))
+         
+        x = np.array([math.log10(k) for k in Z.keys()])
+        y = np.array([math.log10(v) for v in Z.values()])
+        A = np.vstack([x, np.ones(len(x))]).T
+        b, a = np.linalg.lstsq(A, y)[0]
+        
+        return (b, a)
+    
+    def __compute_smoothed_counts(self, a, b):
+        sorted_frequencies = sorted(self.__frequency_counts)
+        
+        use_smooth_for_remaining = False
+        for r in sorted_frequencies:
+            smoothed_count = (r+1.0) * math.exp(a + b*math.log(r+1)) / math.exp(a + b*math.log(r))
+            
+            if r+1 not in self.__frequency_counts:
+                use_smooth_for_remaining = True
+                
+            if use_smooth_for_remaining:
+                self.__smoothed_frequency_counts[r] = smoothed_count
+                continue
+                
+            turing_estimate = ((r+1.0) * self.__frequency_counts[r+1]) / self.__frequency_counts[r]
+            std_dev_for_turing_estimate = math.sqrt( pow(r+1, 2) * \
+                                                     (self.__frequency_counts[r+1] / pow(self.__frequency_counts[r],2) ) * \
+                                                     (1.0 + (self.__frequency_counts[r+1] / self.__frequency_counts[r]))
+                                                   )
+            if abs( smoothed_count - turing_estimate ) <= 1.65 * std_dev_for_turing_estimate:
+                self.__smoothed_frequency_counts[r] = smoothed_count
+                use_smooth_for_remaining = True
+                
+            self.__smoothed_frequency_counts[r] = turing_estimate
+        
+        for frequency, smoothed_count in self.__smoothed_frequency_counts.items():
+            self.__smoothed_total += self.__frequency_counts[frequency] * smoothed_count
         
     def handle_unknown_words(self):
         return True
     
-    def __calculate_frequency_count(self,model):
-        ngrams_counts = model.get_counts()[model.get_n()]
-        for ngram in ngrams_counts:
-            self.__freq_count[ngrams_counts[ngram]] = self.__freq_count.get(ngrams_counts[ngram], 0) + 1
-            self.__gt_n += ngrams_counts[ngram]
-        self.__perform_smoothing()
-        self.__freq_populated = True 
-        
-    def __perform_smoothing(self):
-        sorted_freq = sorted(self.__freq_count)
-        
-        Z = {}
-        for r in range(len(sorted_freq)):
-            if r == 0:
-                q = 0
-            else:
-                q = sorted_freq[r-1]
-                
-            if r == len(sorted_freq)-1:
-                t = 2*sorted_freq[r] - q
-            else:
-                t = sorted_freq[r+1]
-            
-            Z[sorted_freq[r]] = self.__freq_count[sorted_freq[r]] / (0.5 * (t - q))
-         
-        print(Z)
-        x = np.array([math.log10(k) for k in Z.keys()])
-        y = np.array([math.log10(v) for v in Z.values()])
-        A = np.vstack([x, np.ones(len(x))]).T
-        self.__b, self.__a = np.linalg.lstsq(A, y)[0]
-    
-    def __get_smoothed_freq_count(self, freq):
-        freq_count = self.__freq_count.get(freq, 0)
-        smoothed_freq_count = pow(10, self.__a + self.__b * math.log10(freq))
-        return smoothed_freq_count
-#         if freq_count == 0:
-#             return smoothed_freq_count
-#         
-#         #varaiance_turing_freq = pow((freq + 1),2) * (self.__freq_count.get(freq + 1, 0)/pow(self.__freq_count.get(freq, 0), 2)) * ( 1 + (self.__freq_count.get(freq + 1, 0)/self.__freq_count.get(freq, 0)) )
-#         
-#         if abs(freq_count - smoothed_freq_count)  <= 1.65 * math.sqrt(varaiance_turing_freq):
-#             freq_count = smoothed_freq_count
-#         
-#         return freq_count
-#     
-    def __get_c_star(self, model, word_sequence):
-        freq_word_sequence = model.get_counts()[model.get_n()].get(word_sequence, 0)
-        if freq_word_sequence == 0:
-            return self.__get_smoothed_freq_count(1)
-        elif freq_word_sequence <= self.__k:
-            #return (freq_word_sequence + 1) * ( self.__get_smoothed_freq_count(freq_word_sequence+1)/self.__get_smoothed_freq_count(freq_word_sequence) )
-            part_1 = (freq_word_sequence + 1) * ( self.__get_smoothed_freq_count(freq_word_sequence+1)/self.__get_smoothed_freq_count(freq_word_sequence) )
-            part_2 = (freq_word_sequence) * ( ((self.__k+1)*self.__get_smoothed_freq_count(self.__k+1))/self.__get_smoothed_freq_count(1) )
-            part_3 = 1- ( ((self.__k+1)*self.__get_smoothed_freq_count(self.__k+1))/self.__get_smoothed_freq_count(1) )
-            return (part_1 - part_2) / part_3
-        else:
-            return freq_word_sequence
-#         if(c < self.__k):
-#             
-#             return self.__freq_count.get(1,0)/self.__gt_n
-#         else:
-#             numerator=(c+1)*self.__freq_count.get(c+1,0)
-#             denominator = self.__freq_count.get(c,0)
-#             if(numerator==0 or denominator==0):
-#                 return 0;
-#             else:
-#                 return numerator/(denominator*self.__gt_n)
-#             pass
-    
     def calculate_probability(self, model, word_sequence):
-        if(self.__freq_populated == False):
-            self.__calculate_frequency_count(model)
+        if self.__frequency_popluated == False:
+            self.__populate_frequencies(model)
             
-        return (self.__get_c_star(model, word_sequence) / self.__gt_n)
-       
+        prob_zero_frequency = self.__frequency_counts.get(1, 0) / self.__num_ngrams_in_model
+        count_of_word_sequence = model.get_counts()[model.get_n()].get(word_sequence, 0)
+        
+        if count_of_word_sequence == 0:
+            return prob_zero_frequency
+        else:
+            return (1.0 - prob_zero_frequency) * (self.__smoothed_frequency_counts[count_of_word_sequence]/self.__smoothed_total)
         
 
 class BackoffSmoother(ISmoother):

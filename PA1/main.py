@@ -20,14 +20,14 @@ class Controller(object):
         down_train_ngram_models = {}
         
         for n in range(1,4):
-            up_train_ngram_models[n] = NGramModel.NGramModel(self.__up_train.get_parsed_content(), n, smoother)
-            down_train_ngram_models[n] = NGramModel.NGramModel(self.__down_train.get_parsed_content(), n, smoother)  
+            up_train_ngram_models[n] = NGramModel.NGramModel(self.__up_train.get_parsed_content(), n, smoother())
+            down_train_ngram_models[n] = NGramModel.NGramModel(self.__down_train.get_parsed_content(), n, smoother())  
         
         return (up_train_ngram_models, down_train_ngram_models)
     
     def generate_most_frequent_ngrams(self):
         print('Part 2.2 - Unsmoothed n-grams')
-        up_train_ngram_models, down_train_ngram_models = self.__generate_train_models(Smoother.UnSmoother())
+        up_train_ngram_models, down_train_ngram_models = self.__generate_train_models(Smoother.UnSmoother)
         for n in range(1,4):
             up_train_model_counts = up_train_ngram_models[n].get_counts()[n]
             up_train_model_counts_sorted = sorted(up_train_model_counts, key=up_train_model_counts.get)
@@ -39,7 +39,7 @@ class Controller(object):
     
     def generate_random_sentences(self):
         print('Part 2.3 - Random Sentence Generation')
-        up_train_ngram_models, down_train_ngram_models = self.__generate_train_models(Smoother.UnSmoother())
+        up_train_ngram_models, down_train_ngram_models = self.__generate_train_models(Smoother.UnSmoother)
         for n in range(1,4):
             up_train_random_sentence_generator = RandomSentenceGenerator(up_train_ngram_models[n])
             down_train_random_sentence_generator = RandomSentenceGenerator(down_train_ngram_models[n])
@@ -66,7 +66,7 @@ class Controller(object):
     
     def compute_perplexities(self):
         print('Part 2.5 - Perplexity')
-        up_train_ngram_models, down_train_ngram_models = self.__generate_train_models(Smoother.LaplaceSmoother())
+        up_train_ngram_models, down_train_ngram_models = self.__generate_train_models(Smoother.LaplaceSmoother)
         for n in range(1,4):
             up_validation_perplexity = self.compute_perplexity(self.__up_validation, up_train_ngram_models[n])
             down_validation_perplexity = self.compute_perplexity(self.__down_validation, down_train_ngram_models[n])
@@ -75,8 +75,8 @@ class Controller(object):
             print('N = %d, DOWN_TRAIN, Perplexity = %f' %(n, down_validation_perplexity))
             
     def generate_kaggle_file_for_test_data(self, N, smoother, unknown_threshold, output_file_name = 'kaggle.csv'):
-        up_train_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother, unknown_threshold)
-        down_train_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother, unknown_threshold)
+        up_train_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother(), unknown_threshold)
+        down_train_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother(), unknown_threshold)
         
         classifier = Classifier.Classifier(up_train_model, down_train_model)
         
@@ -108,8 +108,8 @@ class Controller(object):
         return num_total_mails, num_correct_classified
     
     def validate_classifications(self, N, smoother, unknown_threshold):
-        train_up_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother, unknown_threshold)
-        train_down_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother, unknown_threshold)
+        train_up_model = NGramModel.NGramModel(self.__up_train.get_parsed_content(), N, smoother(), unknown_threshold)
+        train_down_model = NGramModel.NGramModel(self.__down_train.get_parsed_content(), N, smoother(), unknown_threshold)
         up_total, up_correct = self.count_correct_classification(train_up_model, train_down_model, self.__up_validation, Classifier.Classifier.UP_SPEAK) 
         down_total, down_correct = self.count_correct_classification(train_up_model, train_down_model, self.__down_validation, Classifier.Classifier.DOWN_SPEAK)
         print('UPSPEAK Total = %d, Correct = %d, Percentage = %f' %(up_total, up_correct, (up_correct/up_total)*100))
@@ -121,10 +121,10 @@ def validate_bulk(training_file, validation_file, test_file, smoother):
     for remove_punctuation in (True, False):
         for lowercase in (True, False):
             controller = Controller(training_file, validation_file, test_file, remove_punctuation, lowercase)
-            for N in range(1, 6):
+            for N in range(2, 6):
                 for unknown_threshold in range(2, 6):
                     print('---------------------------------------------------------------------------------------')
-                    print('Remove Punctuation = %s, Lowewrcase = %s, N = %d, Unknown Threshold = %d, Smoother = %s' %(remove_punctuation, lowercase, N, unknown_threshold, smoother.__class__.__name__))
+                    print('Remove Punctuation = %s, Lowewrcase = %s, N = %d, Unknown Threshold = %d, Smoother = %s' %(remove_punctuation, lowercase, N, unknown_threshold, smoother.__name__))
                     controller.validate_classifications(N, smoother, unknown_threshold)
                     print('---------------------------------------------------------------------------------------\n')
 
@@ -143,11 +143,12 @@ def main():
     #part 2.4 and 2.5
     controller.compute_perplexities()
     #Generate Kaggle submission file
-    controller.generate_kaggle_file_for_test_data(5, Smoother.SimpleGTSmoother(), 5)
-    #controller.validate_classifications(5, Smoother.SimpleGTSmoother(), 5)
-    #for verification purpose
-    validate_bulk(training_file, validation_file, test_file, Smoother.LaplaceSmoother())
-    
+    controller.generate_kaggle_file_for_test_data(5, Smoother.LaplaceSmoother, 5)
+    #single validation
+    #controller.validate_classifications(1, Smoother.SimpleGTSmoother, 2)
+    #bulk verification
+    validate_bulk(training_file, validation_file, test_file, Smoother.GTSmoother)
+    validate_bulk(training_file, validation_file, test_file, Smoother.SimpleGTSmoother)
 
 if __name__ == "__main__":
     main()
