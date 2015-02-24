@@ -8,12 +8,12 @@ from RandomSentenceGenerator import RandomSentenceGenerator
 this_file_path = os.path.dirname(os.path.realpath( __file__)) 
 
 class Controller(object):
-    def __init__(self, training_file, validation_file, test_file, remove_punctuation = True, lowercase = True):
-        self.__up_train = Parser(training_file, Parser.UP_LABEL, remove_punctuation, lowercase)
-        self.__down_train = Parser(training_file, Parser.DOWN_LABEL, remove_punctuation, lowercase)
-        self.__up_validation = Parser(validation_file, Parser.UP_LABEL, remove_punctuation, lowercase)
-        self.__down_validation = Parser(validation_file, Parser.DOWN_LABEL, remove_punctuation, lowercase)
-        self.__updown_test = Parser(test_file, remove_punctuation=remove_punctuation, lowercase=lowercase)
+    def __init__(self, training_file, validation_file, test_file, remove_punctuation = True, lowercase = True, use_stemmer = False, use_lemmetizer = False):
+        self.__up_train = Parser(training_file, Parser.UP_LABEL, remove_punctuation, lowercase, use_stemmer, use_lemmetizer)
+        self.__down_train = Parser(training_file, Parser.DOWN_LABEL, remove_punctuation, lowercase, use_stemmer, use_lemmetizer)
+        self.__up_validation = Parser(validation_file, Parser.UP_LABEL, remove_punctuation, lowercase, use_stemmer, use_lemmetizer)
+        self.__down_validation = Parser(validation_file, Parser.DOWN_LABEL, remove_punctuation, lowercase, use_stemmer, use_lemmetizer)
+        self.__updown_test = Parser(test_file, remove_punctuation=remove_punctuation, lowercase=lowercase, use_stemmer=use_stemmer, use_lemmetizer=use_lemmetizer)
         
     def __generate_train_models(self, smoother):
         up_train_ngram_models = {}
@@ -128,6 +128,43 @@ def validate_bulk(training_file, validation_file, test_file, smoother):
                     controller.validate_classifications(N, smoother, unknown_threshold)
                     print('---------------------------------------------------------------------------------------\n')
 
+def generate_kaggle_file(training_file, validation_file, test_file):
+    controller_1 = Controller(training_file, validation_file, test_file, False, False)
+    controller_1.generate_kaggle_file_for_test_data(5, Smoother.LaplaceSmoother, 5, 'vote1.csv')
+    
+    controller_2 = Controller(training_file, validation_file, test_file, True, True, use_lemmetizer=True)
+    controller_2.generate_kaggle_file_for_test_data(5, Smoother.LaplaceSmoother, 5, 'vote2.csv')
+    
+    controller_3 = Controller(training_file, validation_file, test_file, True, False, use_stemmer=True)
+    controller_3.generate_kaggle_file_for_test_data(5, Smoother.LaplaceSmoother, 5, 'vote3.csv')
+    
+    generate_majority_vote_file('vote1.csv', 'vote2.csv', 'vote3.csv')
+    
+def read_vote_file( file_name ):
+    mail_pred_dict = {}
+    with open(file_name) as file:
+        for line in file.readlines():
+            mail_id = line.strip().split(',')[0]
+            prediction = line.strip().split(',')[1]
+            if mail_id.isdigit():
+                mail_pred_dict[mail_id] = prediction
+    return mail_pred_dict
+
+def generate_majority_vote_file( vote1_file, vote2_file, vote3_file, output_file = 'majority_vote.csv' ):
+    vote1_dict = read_vote_file( vote1_file )
+    vote2_dict = read_vote_file( vote2_file )
+    vote3_dict = read_vote_file( vote3_file )
+    
+    final_decision = {}
+    for mail_id in vote1_dict:
+        votes = [vote1_dict[mail_id], vote2_dict[mail_id], vote3_dict[mail_id]]
+        final_decision[mail_id] = max(set(votes), key=votes.count)
+        
+    sorted_mail_ids = sorted([int(mail_id) for mail_id in final_decision])
+    with open(output_file, 'w') as out_file:
+        out_file.write('Id,Prediction\n')
+        for mail_id in sorted_mail_ids:
+            out_file.write('%s,%s\n' %(mail_id, final_decision[str(mail_id)]))
 
 def main():
     training_file = os.path.join(this_file_path, 'training.txt')
@@ -143,12 +180,13 @@ def main():
     #part 2.4 and 2.5
     controller.compute_perplexities()
     #Generate Kaggle submission file
-    controller.generate_kaggle_file_for_test_data(5, Smoother.LaplaceSmoother, 5)
+    generate_kaggle_file(training_file, validation_file, test_file)
     #single validation
-    #controller.validate_classifications(1, Smoother.SimpleGTSmoother, 2)
-    #bulk verification
-    validate_bulk(training_file, validation_file, test_file, Smoother.GTSmoother)
-    validate_bulk(training_file, validation_file, test_file, Smoother.SimpleGTSmoother)
+    #controller.validate_classifications(5, Smoother.LaplaceSmoother, 3)
+    #bulk validation
+    #validate_bulk(training_file, validation_file, test_file, Smoother.GTSmoother)
+    #validate_bulk(training_file, validation_file, test_file, Smoother.SimpleGTSmoother)
+
 
 if __name__ == "__main__":
     main()

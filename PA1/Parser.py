@@ -1,3 +1,4 @@
+from nltk.stem.snowball import SnowballStemmer
 from nltk import tokenize
 from nltk.tokenize import RegexpTokenizer
 import NGramModel
@@ -6,9 +7,11 @@ class Parser(object):
     UP_LABEL = 'UPSPEAK'
     DOWN_LABEL = 'DOWNSPEAK'
     
-    def __init__(self, content_file, label = None, remove_punctuation = True, lowercase = True):
+    def __init__(self, content_file, label = None, remove_punctuation = True, lowercase = True, use_stemmer = False, use_lemmetizer = False):
         self.__list_of_mails = []
         self.__lowercase = lowercase
+        self.__use_stemmer = use_stemmer
+        self.__use_lemmetizer = use_lemmetizer
         if remove_punctuation:
             self.__tokenizer = RegexpTokenizer(r'\w+').tokenize
         else:
@@ -45,6 +48,10 @@ class Parser(object):
         parsed_mail = []
         for sentence in sentences:
             tokens = self.__tokenizer(sentence)
+            if self.__use_lemmetizer:
+                tokens = [SnowballStemmer("english").stem(token) for token in tokens]
+            elif self.__use_stemmer:
+                tokens = [SnowballStemmer("porter").stem(token) for token in tokens]
             if len(tokens) > 0:
                 self.__add_start_end_sentence_token(tokens)
                 parsed_mail = parsed_mail + tokens
