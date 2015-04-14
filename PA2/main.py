@@ -1,6 +1,7 @@
 import os
 from Question import *
 from Document import *
+from TFIDFPassageRetriever import *
 
 this_file_path = os.path.realpath(os.path.basename(__file__))
 
@@ -65,9 +66,22 @@ class Controller(object):
             relevent_passages = self.__RetrieveReleventPassages(question, passage_retriever)
             candidate_answers = self.__ProcessAnswers(question, relevent_passages, answer_processor)
 
+    ''' Get a question given the questionNo (for testing purposes)
+    '''
+    def GetQuestion(self,questionNo):
+        return self.__questions[questionNo]
    
 def main():
     controller = Controller(dev_questions_file, dev_top_docs_folder)
+    passage_retriever= TFIDFPassageRetriever()
+
+    ''' Code to test Related Passages
+    question=controller.GetQuestion(10)
+    print question.GetRawQuestion()
+    relatedPassages=passage_retriever.GetRelatedPassages(question,10)
+    for p in relatedPassages:
+        print p
+    '''
     #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
 
 
