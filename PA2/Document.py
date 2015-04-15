@@ -22,7 +22,7 @@ class Document(object):
         return self.__score
 
     def GetText(self):
-        return self.__score
+        return self.__text
 
     ''' Remove the stopwords in text t and return new string
     '''

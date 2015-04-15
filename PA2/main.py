@@ -75,13 +75,13 @@ def main():
     controller = Controller(dev_questions_file, dev_top_docs_folder)
     passage_retriever= TFIDFPassageRetriever()
 
-    ''' Code to test Related Passages
-    question=controller.GetQuestion(10)
+    ''' Code to test Related Passages '''
+    question=controller.GetQuestion(1)
     print question.GetRawQuestion()
-    relatedPassages=passage_retriever.GetRelatedPassages(question,10)
+    relatedPassages=passage_retriever.GetRelatedPassages(question,20)
     for p in relatedPassages:
         print p
-    '''
+   
     #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
 
 
