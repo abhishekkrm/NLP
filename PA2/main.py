@@ -1,18 +1,18 @@
 import os
+import Document
 from Question import *
-from Document import *
-from TFIDFPassageRetriever import *
+from TFIDFPassageRetriever import TFIDFPassageRetriever
 
-this_file_path = os.path.realpath(os.path.basename(__file__))
+this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
 
-answers_patterns_file = os.path.join('pa2-release', 'qadata', 'dev', 'answer_patterns.txt')
-relevent_docs_file = os.path.join('pa2-release', 'qadata', 'dev', 'relevant_docs.txt')
+answers_patterns_file = os.path.join(this_file_path, 'pa2-release', 'qadata', 'dev', 'answer_patterns.txt')
+relevent_docs_file = os.path.join(this_file_path, 'pa2-release', 'qadata', 'dev', 'relevant_docs.txt')
 
-dev_questions_file = os.path.join('pa2-release', 'qadata', 'dev','questions.txt')
-test_questions_file = os.path.join('pa2-release', 'qadata', 'test','questions.txt')
+dev_questions_file = os.path.join(this_file_path, 'pa2-release', 'qadata', 'dev','questions.txt')
+test_questions_file = os.path.join(this_file_path, 'pa2-release', 'qadata', 'test','questions.txt')
 
-dev_top_docs_folder = os.path.join('pa2-release', 'topdocs', 'dev')
-test_top_docs_folder = os.path.join('pa2-release', 'topdocs', 'test')
+dev_top_docs_folder = os.path.join(this_file_path, 'pa2-release', 'topdocs', 'dev')
+test_top_docs_folder = os.path.join(this_file_path, 'pa2-release', 'topdocs', 'test')
 
 
 class Controller(object):
@@ -24,31 +24,33 @@ class Controller(object):
     ''' Read question number and raw question from file and create question object
     '''
     def __ParseQuestionsFile(self, questions_file):
-    	i=0
-        questionNumber=0
         with open(questions_file, "r") as ins:
             for line in ins:
-	        if i%3==0:
-	            questionNumber=int(line.rstrip("\r\n").lstrip("Number: "))	
-	        if i%3==1:
-                    self.__questions[questionNumber]=Question(questionNumber,line.rstrip("\r\n"))
-                i+=1
+                if line.strip() != '':
+                    if line.startswith('Number:'):
+                        questionNumber = int(line.split(':')[1].strip())
+                    else:
+                        self.__questions[questionNumber] = Question(questionNumber, line.strip())
     
     ''' Parses top documents and creates a list of Document objects for each Question Object 
     '''
     def __ParseTopDocuments(self, top_docs_folder):
         for questionNo in self.__questions:
-            top_docs_file= os.path.join(top_docs_folder,"top_docs."+str(questionNo))
+            top_docs_file = os.path.join(top_docs_folder,"top_docs." + str(questionNo))
+            
             text=""
-            with open(top_docs_file, "r") as ins:
-	        for line in ins:
-		    text+=line
-            splitDocuments=text.split("Qid: ") 
+            with open(top_docs_file, "r", errors='ignore') as ins:
+                for line in ins:
+                    text += line
+            
+            splitDocuments=text.strip().split("Qid: ") 
             del splitDocuments[0]
+            
             top_documents=[]
             for textDocument in splitDocuments:
-                document=Document(textDocument)
+                document = Document.Document(textDocument)
                 top_documents.append(document)                               
+            
             self.__questions[questionNo].SetTopDocuments(top_documents)
                 
     def __ProcessQuesion(self, question, question_processor):
@@ -61,29 +63,33 @@ class Controller(object):
         pass
     
     def GenerateAnswers(self, question_processor, passage_retriever, answer_processor):
+        answers = {}
         for _, question in self.__questions.items():
             self.__ProcessQuesion(question, question_processor)
             relevent_passages = self.__RetrieveReleventPassages(question, passage_retriever)
             candidate_answers = self.__ProcessAnswers(question, relevent_passages, answer_processor)
+            answers[question.GetQuestionNumber()] = candidate_answers
+        return answers
 
     ''' Get a question given the questionNo (for testing purposes)
     '''
-    def GetQuestion(self,questionNo):
+    def _GetQuestion(self,questionNo):
         return self.__questions[questionNo]
    
+
 def main():
     controller = Controller(dev_questions_file, dev_top_docs_folder)
+    #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
+    
     passage_retriever= TFIDFPassageRetriever()
-
+ 
     ''' Code to test Related Passages '''
-    question=controller.GetQuestion(1)
-    print question.GetRawQuestion()
+    question=controller._GetQuestion(1)
+    print(question.GetRawQuestion())
     relatedPassages=passage_retriever.GetRelatedPassages(question,20)
     for p in relatedPassages:
-        print p
-   
-    #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
-
-
+        print(p)
+       
+    
 if __name__ == '__main__':
     main()

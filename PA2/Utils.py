@@ -2,7 +2,7 @@ from nltk.corpus import stopwords
 
 ''' Remove the stopwords in the given text and return new string
 '''
-def RemoveStopwords(self, text):
+def RemoveStopwords(text):
     stopWordsList = stopwords.words('english')
-    textWrods = text.split().strip()
+    textWrods = text.split()
     return ' '.join([word for word in textWrods if word not in stopWordsList])

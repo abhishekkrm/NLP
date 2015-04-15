@@ -1,60 +1,57 @@
+import re
 from nltk.tokenize import sent_tokenize
-from nltk.util import ngrams
-from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.corpus import stopwords
-
 
 ''' A class representing a document returned by IR system
 '''
 class Document(object):
     def __init__(self, document_data):
+        self.__score = 0.0
+        self.__rank = 0
+        self.text = ''
         self.__ParseDocument(document_data)
         
     def __ParseDocument(self, document_data):
-        self.__score=float(document_data.split("Score: ")[-1].split("\n")[0])
-        text=document_data.split("<TEXT>\n")[-1].split("\n</TEXT>")[0]
-        # Remove <P> and </P> and \n
-        text=text.replace("<P>\n","").replace("</P>\n","").replace("\n"," ").replace("  "," ")
-        text=text.replace("<P>","").replace("</P>","")
-        self.__text=text
+        self.__PopulateRankAndScore(document_data)
+        self.__PopulateText(document_data)
 
+    def __PopulateRankAndScore(self, document_data):
+        rank_and_score = re.findall('Rank:.*Score:.*', document_data)
+        self.__rank = int(re.findall('Rank: \d+', rank_and_score[0])[0].split(':')[1].strip())
+        self.__score = float(re.findall('Score: \d*\.*\d+', rank_and_score[0])[0].split(':')[1].strip())
+    
+    def __PopulateText(self, document_data):
+        text = self.__GetTagData(document_data, 'TEXT')
+        text += self.__GetTagData(document_data, 'LEADPARA')
+        self.__text = self.__RemoveTag(text, 'P')
+           
+    def __GetTagData(self, document_data, tag):
+        search_tag = '<' + tag + '.*?>.*?' + '</' + tag + '>'
+        result_text = re.findall(search_tag, document_data, re.DOTALL)
+        if len(result_text) > 0:
+            return self.__RemoveTag(result_text[0], tag)
+        else:
+            return ''
+    
+    def __RemoveTag(self, data, tag):
+        start_tag = '<' + tag + '.*?>'
+        end_tag = '</' + tag + '>'
+        
+        result_text = re.sub(start_tag, '', data)
+        result_text = re.sub(end_tag, '', result_text)
+        
+        return result_text
+    
     def GetScore(self):
         return self.__score
 
     def GetText(self):
         return self.__text
 
-    ''' Remove the stopwords in text t and return new string
-    '''
-    def RemoveStopwords(self,t):
-        stop = stopwords.words('english')
-        return ' '.join([i for i in t.split() if i not in stop])
-
+    def GetRank(self):
+        return self.__rank
+    
     ''' Returns a list of the sentences of the document
     '''
-    def ParseSentences(self):
-        sentences=sent_tokenize(self.__text)
-        result=[]
-        for s in sentences:
-            if len(s)>2:
-                result.append(s)
-        return result
-
-    ''' Returns a dictionary of Sentence->TF-IDF Similarity with the question
-    '''
-    def GetTFIDFSentenceRelevance(self,question):
-        vect = TfidfVectorizer(min_df=1)
-        sentences=self.ParseSentences()
-        # Remove stop words from sentences and set to lowercase
-        sentencesCleared=[]
-        questionCleared=self.RemoveStopwords(question.GetRawQuestion().lower())       
-        for s in sentences:
-            sentencesCleared.append(self.RemoveStopwords(s).lower())
-        # Compute the TFIDF similarity between the question and the sentences
-        tfidf = vect.fit_transform([questionCleared]+sentencesCleared)
-        score= (tfidf * tfidf.T).A[0,1:]
-        sentenceRelevance={}		
-        for i in range(len(sentencesCleared)):
-            sentenceRelevance[sentences[i]]=score[i]
-        return sentenceRelevance
-      	
+    def GetSentences(self):
+        sentences = sent_tokenize(self.__text)
+        return [sentence for sentence in sentences if len(sentence) > 2]
