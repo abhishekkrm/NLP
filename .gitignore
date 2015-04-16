@@ -3,4 +3,5 @@
 *.pyc
 *.txt
 !/PA2/pa2-release/*.txt
+!/PA2/stanford-ner-2015-01-30/*
 *.csv
