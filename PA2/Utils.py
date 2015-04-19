@@ -12,7 +12,17 @@ stanford_ner_folder = os.path.join(this_file_path, 'stanford-ner-2015-01-30')
 ner_jar_path = os.path.join(stanford_ner_folder, 'stanford-ner.jar')
 ner_classifier_path = os.path.join(stanford_ner_folder, 'classifiers', 'english.all.7class.distsim.crf.ser.gz') 
 ner_tagger = NERTagger(ner_classifier_path, ner_jar_path)
-    
+
+#Taken from https://gist.github.com/alexbowe/879414 
+grammar = r"""
+    NBAR:
+        {<NN.*|JJ>*<NN.*>}  # Nouns and Adjectives, terminated with Nouns
+        
+    NP:
+        {<NBAR>}
+        {<NBAR><IN><NBAR>}  # Above, connected with in/of/etc...
+"""
+chunker = nltk.RegexpParser(grammar)
 
 ''' Remove the stopwords in the given text and return new string
 '''
@@ -42,3 +52,14 @@ def POSTag(text):
 def GetNGrams(text, N = 2):
     return ngrams(text.split(), N)
 
+''' Given text returns the list of specified Phrase (eg. NP for noun phrases) in it
+'''
+def GetPhrases(text, phrase='NP'):
+    pos_tokens = POSTag(text)
+    parse_tree = chunker.parse(pos_tokens)
+    
+    result_phrases = []
+    for subtree in parse_tree.subtrees(filter=lambda t: t.label() == phrase):
+        result_phrases.append(' '.join([ word[0] for word in subtree.leaves()]))
+    return result_phrases
+        
