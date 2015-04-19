@@ -1,5 +1,6 @@
 import os
 import nltk
+import re
 from nltk.corpus import stopwords
 from nltk.tag.stanford import NERTagger
 from nltk.util import ngrams
@@ -62,4 +63,12 @@ def GetPhrases(text, phrase='NP'):
     for subtree in parse_tree.subtrees(filter=lambda t: t.label() == phrase):
         result_phrases.append(' '.join([ word[0] for word in subtree.leaves()]))
     return result_phrases
-        
+    
+''' Return True if search_word exists as a word in text, False otherwise
+    eg. text = "It was good show." search_word = "how" ==> Result: False
+        text = "How are you?" search_word = "how" ==> Result =: True
+'''    
+def ContainsWholeWord(text, search_word):
+    match_object = re.compile(r'\b({0})\b'.format(search_word), re.IGNORECASE).search(text)
+    return match_object != None
+
