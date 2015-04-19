@@ -7,6 +7,7 @@ class Question(object):
         self.__question_number = question_no
         self.__raw_question = raw_question
         self.__keywords = []
+        self.__noun_phrases = []
         self.__expected_answer_type = ''
         self.__top_documents = []
         self.__answer_list = []
@@ -28,6 +29,12 @@ class Question(object):
         
     def GetKeywords(self):
         return self.__keywords
+    
+    def SetNounPhrases(self, noun_phrases):
+        self.__noun_phrases = noun_phrases
+        
+    def GetNounPhrases(self):
+        return self.__noun_phrases
     
     def SetExpectedAnswerType(self, expected_answer_type):
         self.__expected_answer_type = expected_answer_type
