@@ -10,6 +10,7 @@ class Question(object):
         self.__noun_phrases = []
         self.__expected_answer_type = ''
         self.__top_documents = []
+        self.__answer_list = []
         
     def GetQuestionNumber(self):
         return self.__question_number
@@ -17,6 +18,12 @@ class Question(object):
     def GetRawQuestion(self):
         return self.__raw_question
     
+    def AddAnswer(self, answer_txt):
+        self.__answer_list.append(answer_txt.strip())
+    
+    def GetAnswerList(self):
+        return (self.__answer_list)
+        
     def SetKeywords(self, keywords):
         self.__keywords = keywords
         
