@@ -62,4 +62,7 @@ def GetPhrases(text, phrase='NP'):
     for subtree in parse_tree.subtrees(filter=lambda t: t.label() == phrase):
         result_phrases.append(' '.join([ word[0] for word in subtree.leaves()]))
     return result_phrases
-        
+
+
+                
+

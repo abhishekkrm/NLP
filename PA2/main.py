@@ -4,6 +4,7 @@ import Document
 import Utils
 from Question import *
 from TFIDFPassageRetriever import TFIDFPassageRetriever
+import LanguageModel
 
 
 this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
@@ -51,7 +52,8 @@ class Controller(object):
             
             splitDocuments=text.strip().split("Qid: ") 
             del splitDocuments[0]
-            
+            #print(splitDocuments)
+            #sleep(1)
             top_documents=[]
             for textDocument in splitDocuments:
                 document = Document.Document(textDocument)
@@ -95,7 +97,34 @@ class Controller(object):
     def _GetQuestion(self,questionNo):
         return self.__questions[questionNo]
    
-
+    def _Debug(self):
+        for _, question in self.__questions.items():
+            #print(Utils.TagNamedEntities(question.GetRawQuestion()))
+            #print("START---------------------------------------------------------------------")
+            #question = self._GetQuestion(7)
+            #answertag = LanguageModel.LanguageModel()
+            #print(question.GetRawQuestion())
+            #print(answertag.GetKeyWordsList(question.GetRawQuestion()))
+            #print(answertag.GetAnswerTag(question.GetRawQuestion()))
+            passage_retriever= TFIDFPassageRetriever()
+            relatedPassages=passage_retriever.GetRelatedPassages(question,100)
+            test = "All selections are served with sausage Italian herb potatoes and pandoro, a sweet Italian bread"
+            print (Utils.TagNamedEntities(test))
+            for p in relatedPassages:
+#                print (p)
+                text_type_list_passages = Utils.TagNamedEntities(p)
+                for text_type_list in text_type_list_passages:
+                    for text_type in text_type_list: 
+                        #print (text_type)
+                        #print ("----------")
+                        text = text_type[0]
+                        type = text_type[1]
+                        if type != 'O':
+                            print(str(text) +"-------->"+ str(type))
+                            pass
+            #print("END-------------------------------------------------------------------------------")
+    #    print(p)
+        
 def main():
     controller = Controller(dev_questions_file, dev_top_docs_folder)
     #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
@@ -103,18 +132,16 @@ def main():
     passage_retriever= TFIDFPassageRetriever()
  
     ''' Code to test Related Passages '''
-    question=controller._GetQuestion(0)
-    question.AddAnswer("kings los")
-    question.AddAnswer("kings")
-    msg = question.GetRawQuestion()
-    relatedPassages=passage_retriever.GetRelatedPassages(question,20)
+    
+    #controller._Debug()
+    
+    #relatedPassages=passage_retriever.GetRelatedPassages(question,20)
     #for p in relatedPassages:
     #    print(p)
-    
     # Generate Answer File
-    controller.GenerateAnswerFile(answer_file)
+    # controller.GenerateAnswerFile(answer_file)
     # Validation of Answer
-    controller.ValidateAnswerFile(validation_script, answers_patterns_file, answer_file)   
+    #controller.ValidateAnswerFile(validation_script, answers_patterns_file, answer_file)   
 
 
     
