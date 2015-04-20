@@ -7,17 +7,18 @@ class SVMQuestionProcessor(IQuestionProcessor):
     def __init__(self, training_file, N_Gram = 2):
         self.__classifier = SklearnClassifier(LinearSVC())
         self.__feature_set = set()
-        self.__TrainClassifier(training_file, N_Gram)
+        self.__N_Gram = N_Gram
+        self.__TrainClassifier(training_file)
         
-    def __PopulateFeatureSet(self, training_file, N_Gram):
+    def __PopulateFeatureSet(self, training_file):
         with open(training_file) as t_file:
             for line in t_file:
-                n_grams = Utils.GetNGrams(' '.join(line.strip().split()[1:]), N_Gram)
+                n_grams = Utils.GetNGrams(' '.join(line.strip().split()[1:]), self.__N_Gram)
                 for n_gram in n_grams:
                     self.__feature_set.add(n_gram)
 
     def __BuildQuestionVector(self, question_text):
-        question_n_grams = Utils.GetNGrams(question_text)
+        question_n_grams = Utils.GetNGrams(question_text, self.__N_Gram)
                 
         question_vector = {}
         for feature in self.__feature_set:
@@ -25,8 +26,8 @@ class SVMQuestionProcessor(IQuestionProcessor):
         
         return question_vector
     
-    def __TrainClassifier(self, training_file, N_Gram):
-        self.__PopulateFeatureSet(training_file, N_Gram)
+    def __TrainClassifier(self, training_file):
+        self.__PopulateFeatureSet(training_file)
         
         labeled_featuresets = []
         with open(training_file) as t_file:
