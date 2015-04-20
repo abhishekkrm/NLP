@@ -4,6 +4,7 @@
 *.txt
 !/PA2/pa2-release/*.txt
 !/PA2/qtype_train_1000.txt
+!/PA2/qtype_train_5500.txt
 !/PA2/dt_qtype_classifications.txt
 !/PA2/stanford-ner-2015-01-30/*
 *.csv
