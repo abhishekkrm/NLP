@@ -1,14 +1,14 @@
-import Utils
 import operator
 from PassageRetriever import IPassageRetriever
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-class TFIDFPassageRetriever(IPassageRetriever):
+''' Differs from TFIDFPassageRetriever in a way that it uses passages instead of sentences
+'''
+class TFIDFPassageRetrieverNew(IPassageRetriever):
     
-    ''' Returns a dictionary of <Sentence> --> <TF-IDF Similarity with the question> for all sentences in document
+    ''' Returns a dictionary of <Passage> --> <TF-IDF Similarity with the question> for all sentences in document
     '''
     def __GetdocPassageRelevance(self, document, question):
-        
         docPassages = document.GetPassages()
         # Passage list in lowercase  
         docPassages = [passage.lower() for passage in docPassages]
@@ -29,7 +29,7 @@ class TFIDFPassageRetriever(IPassageRetriever):
     ''' From the list of top documents figures out the n most relevent passages
     '''
     def GetRelatedPassages(self, question, n=10):
-        # Gather all the sentences of all the documents (top documents for the given question) and their similarity score
+        # Gather all the passages of all the documents (top documents for the given question) and their similarity score
         relevantPassages={}
 
         topDocuments=question.GetTopDocuments()
