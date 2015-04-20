@@ -7,13 +7,13 @@ class IQuestionProcessor(metaclass=ABCMeta):
         return a list of keywords
     '''
     @abc.abstractmethod
-    def GetQueryKeywords(self, raw_question_text):
+    def GetQueryKeywords(self, question):
         pass
     
     ''' Given a question find out what answer type it expects (eg. PERSON, CITY ?)
         return a list of answer types (in rank order possibly ??)
     '''
     @abc.abstractmethod
-    def GetAnswerType(self, raw_question_text):
+    def GetAnswerType(self, question):
         pass
     

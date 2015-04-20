@@ -6,14 +6,16 @@ class TREC9QuestionProcessor(IQuestionProcessor):
     ''' Given a question find out the important keywords in it.
         return a list of keywords
     '''
-    def GetQueryKeywords(self, raw_question_text):
-        question_text_without_stop_words =  Utils.RemoveStopwords(raw_question_text)
+    def GetQueryKeywords(self, question):
+        question_text_without_stop_words =  Utils.RemoveStopwords(question.GetRawQuestion())
         return question_text_without_stop_words.split()
     
     ''' Given a question find out what answer type it expects (eg. PERSON, CITY ?)
         return a list of answer types (in rank order possibly ??)
     '''
-    def GetAnswerType(self, raw_question_text):
+    def GetAnswerType(self, question):
+        raw_question_text = question.GetRawQuestion()
+        
         #When, where, why, describe, define
         straight_types = {  'When' : 'TIME',
                             'Where' : 'PLACE',
