@@ -6,6 +6,8 @@ from Question import *
 from TFIDFPassageRetriever import TFIDFPassageRetriever
 import LanguageModel
 
+from TFIDFPassageRetriever import TFIDFPassageRetriever
+from QuestionProcessor import DecisionTreeQuestionProcessor
 
 this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
 
@@ -20,6 +22,7 @@ test_top_docs_folder = os.path.join(this_file_path, 'pa2-release', 'topdocs', 't
 
 validation_script = os.path.join(this_file_path,'pa2-release','evaluation.py')
 answer_file = os.path.join(this_file_path,'answer.txt')
+que_number_str = "Number: "
 
 class Controller(object):
     def __init__(self, questions_file, top_docs_folder):
@@ -62,7 +65,23 @@ class Controller(object):
             self.__questions[questionNo].SetTopDocuments(top_documents)
                 
     def __ProcessQuesion(self, question, question_processor):
-        pass
+        question_processor.GetQueryKeywords(question)
+        answer_type = question_processor.GetAnswerType(question)
+        return answer_type
+        
+    
+    def ProcessQuestions(self,question_processor):
+        isPresent = os.path.exists('answer_types.txt')
+        if(isPresent != True):
+            f = open('answer_types.txt', 'w')
+        for _,question in self.__questions.items():
+            answer_type = self.__ProcessQuesion(question, question_processor)
+            if(isPresent!=True):
+                f.write(str(question.GetQuestionNumber())+"~"+answer_type+"\n")
+            #else:
+            #   print(str(question.GetQuestionNumber())+" = "+answer_type)
+        if(isPresent!=True):
+            f.close()
     
     def __RetrieveReleventPassages(self, question, passage_retriever):
         pass
@@ -127,7 +146,7 @@ class Controller(object):
         
 def main():
     controller = Controller(dev_questions_file, dev_top_docs_folder)
-    #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
+#controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
     
     passage_retriever= TFIDFPassageRetriever()
  
@@ -143,7 +162,16 @@ def main():
     # Validation of Answer
     #controller.ValidateAnswerFile(validation_script, answers_patterns_file, answer_file)   
 
+    #controller.GenerateAnswerFile(answer_file)
+    # Validation of Answer
+    #controller.ValidateAnswerFile(validation_script, answers_patterns_file, answer_file)   
 
+    question_processor = DecisionTreeQuestionProcessor()
+    question_processor.GenerateModel()
+    controller.ProcessQuestions(question_processor)
     
+    #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
+
+
 if __name__ == '__main__':
     main()
