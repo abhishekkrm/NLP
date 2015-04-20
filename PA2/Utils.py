@@ -51,7 +51,14 @@ def POSTag(text):
 ''' Given a text returns a list of ngrams
 '''
 def GetNGrams(text, N = 2):
-    return ngrams(text.split(), N)
+    computed_ngrams = ngrams(text.split(), N)
+    return [' '.join(ngram).strip() for ngram in computed_ngrams]
+
+''' Given a text returns a dict of ngram counts. <ngram> <--> <count>
+'''
+def GetNGramCounts(text, N = 2):
+    n_grams_text = GetNGrams(text, N)
+    return dict((ngram, n_grams_text.count(ngram)) for ngram in n_grams_text)
 
 ''' Given text returns the list of specified Phrase (eg. NP for noun phrases) in it
 '''
