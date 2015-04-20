@@ -1,8 +1,8 @@
 import os
 import Document
 import Utils
+import MLQuestionProcessors
 from Question import Question
-from DecisionTreeQuestionProcessor import DecisionTreeQuestionProcessor
 
 this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
 
@@ -15,7 +15,8 @@ test_questions_file = os.path.join(this_file_path, 'pa2-release', 'qadata', 'tes
 dev_top_docs_folder = os.path.join(this_file_path, 'pa2-release', 'topdocs', 'dev')
 test_top_docs_folder = os.path.join(this_file_path, 'pa2-release', 'topdocs', 'test')
 
-question_type_training_file = os.path.join(this_file_path, 'qtype_train_1000.txt')
+question_type_training_file_1000 = os.path.join(this_file_path, 'qtype_train_1000.txt')
+question_type_training_file_5500 = os.path.join(this_file_path, 'qtype_train_5500.txt')
 
 validation_script = os.path.join(this_file_path,'pa2-release','evaluation.py')
 answer_file = os.path.join(this_file_path,'answer.txt')
@@ -110,9 +111,9 @@ class Controller(object):
     ''' As the name suggests for debugging purposes
     '''
     def _Debug(self):
-        dtqp = DecisionTreeQuestionProcessor(question_type_training_file, 2)
+        dtqp = MLQuestionProcessors.DecisionTreeQuestionProcessor(question_type_training_file_5500)
         for _, question in self.__questions.items():
-            print(dtqp.GetAnswerType(question))
+            print(dtqp.GetAnswerType(question) + '~' + question.GetRawQuestion())
         dtqp.DumpInfo()
         
 def main():
