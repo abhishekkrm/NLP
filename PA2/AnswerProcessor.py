@@ -31,8 +31,12 @@ class SimpleAnswerProcessor(IAnswerProcessor):
                         break
         
         return candidate_answers
- 
+
+''' NER based Answer processor
+'''
 class NERAnswerProcessor(IAnswerProcessor):
+    ''' Returns list of (word,NER) tuples
+    '''
     def GetAnswers(self,question,relevant_passages,num_answers=10):
          candidate_answers = []
          tokenizer = RegexpTokenizer(r'\w+')
