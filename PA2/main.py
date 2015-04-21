@@ -130,22 +130,47 @@ class Controller(object):
     def _GetQuestion(self,questionNo):
         return self.__questions[questionNo]
    
+    ''' Debugging support
+    '''
+    def __DebugGetQuestionProcessorPreClassifiedFile(self, question_processor_type):
+        if question_processor_type.__name__ == 'MultinomialNBQuestionProcessor':
+            return os.path.join(this_file_path, 'a_MultinomialNBQuestion.txt')
+        elif question_processor_type.__name__ == 'LinearSVCQuestionProcessor':
+            return os.path.join(this_file_path, 'a_LinearSVCQuestion.txt')
+        elif question_processor_type.__name__ == 'DecisionTreeQuestionProcessor':
+            return os.path.join(this_file_path, 'a_DecisionTreeQuestion.txt')
+            
+    ''' Debugging support
+    '''
+    def __DebugQuestionProcesssor(self, question, question_processor_type):
+        classification_file = self.__DebugGetQuestionProcessorPreClassifiedFile(question_processor_type)
+       
+        with open(classification_file) as classification_fp:
+            for line in classification_fp:
+                ans_type_and_question = line.strip().split('~')
+                if ans_type_and_question[1] == question.GetRawQuestion():
+                    question.SetExpectedAnswerType(ans_type_and_question[0])
+                    return
+                
+        #control should never reach here - unless there is a bug!
+        assert False
+        
     ''' As the name suggests for debugging purposes
     '''
-    def _Debug(self, question_processor, passage_retriever, answer_processor):
+    def _Debug(self, question_processor_type, passage_retriever, answer_processor):
         question =  self._GetQuestion(0)
         print ('~~~~~~~~~~~~~~~~Question~~~~~~~~~~~~~~~~')
         
-        self.__ProcessQuesion(question, question_processor)
+        self.__DebugQuestionProcesssor(question, question_processor_type)
         print("Question: "+ question.GetRawQuestion())
         print("AnswerType: " + question.GetExpectedAnswerType())
         print("Keywords: "+ " ".join(question.GetKeywords()))
-
+ 
         relevent_passages_and_scores = self.__RetrieveReleventPassages(question, passage_retriever)
         print("--------------Relevant Passage And Scores --------------")
         for passage_and_score in relevent_passages_and_scores:
             print(passage_and_score[0])
-        
+         
         candidate_answers = self.__ProcessAnswers(question, relevent_passages_and_scores, answer_processor)
         print('~~~~~~~~~~~~~~~~AnswerList~~~~~~~~~~~~~~~~')
         for answer in candidate_answers:
@@ -155,16 +180,18 @@ def main():
     controller = Controller(dev_questions_file, dev_top_docs_folder)
 
     # Can be LinearSVCQuestionProcessor or MultinomialNBQuestionProcessor or DecisionTreeQuestionProcessor
-    question_processor = MLQuestionProcessors.MultinomialNBQuestionProcessor(question_type_training_file_1000)
+    #question_processor = MLQuestionProcessors.MultinomialNBQuestionProcessor(question_type_training_file_1000)
+    
     # Can be PassageRetrieverImpl1 or PassageRetrieverImpl2 or PassageRetrieverImpl3
     passage_retriever = PassageRetrieverImpl2()    
+    
     # Can be AnswerProcessorImpl1 or AnswerProcessorImpl2
     answer_processor = AnswerProcessorImpl1()
     
     # Generate Answer and write to answer_file
-    controller.GenerateAnswers(question_processor, passage_retriever, answer_processor,answer_file)
+    #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor,answer_file)
     
-    # controller._Debug(question_processor, passage_retriever, answer_processor)
+    controller._Debug(MLQuestionProcessors.MultinomialNBQuestionProcessor, passage_retriever, answer_processor)
 
 
 if __name__ == '__main__':
