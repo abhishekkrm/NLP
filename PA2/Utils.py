@@ -33,13 +33,13 @@ def RemoveStopwords(text):
     textWrods = text.split()
     return ' '.join([word for word in textWrods if word not in stopWordsList])
 
+''' Given a test returns a lemmetized string
+'''
 def Lemmatize(text):
     lmtzr = WordNetLemmatizer()
     tokens = nltk.word_tokenize(text)
-    new_tokens = []
-    for token in tokens:
-        new_tokens.append(lmtzr.lemmatize(token))
-    return " ".join(new_tokens)
+    return " ".join([lmtzr.lemmatize(token) for token in tokens])
+
 ''' Given a list of words returns a list of tuples of type (word, NE tag)
 '''
 def TagNamedEntitiesInList(word_list):
@@ -53,7 +53,7 @@ def TagNamedEntities(text):
 ''' Given a text returns a list of tuples of type (word, POS tag)
 '''
 def POSTag(text):
-    tokens = text.split()
+    tokens = nltk.word_tokenize(text)
     return nltk.pos_tag(tokens)
 
 ''' Given a text returns a list of ngrams

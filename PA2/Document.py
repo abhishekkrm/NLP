@@ -28,12 +28,11 @@ class Document(object):
         return result_text
     
     def __GetBodyText(self, document_data):
-        
         result_text = self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'CAPTION')), 'CAPTION')
-        result_text+= self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'HEADLINE')), 'HEADLINE')
-        result_text+= self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'SUBJECT')), 'SUBJECT')
-        result_text+= self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'GRAPHIC')), 'GRAPHIC')
-        result_text+= self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'TEXT')), 'TEXT')
+        result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'HEADLINE')), 'HEADLINE')
+        result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'SUBJECT')), 'SUBJECT')
+        result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'GRAPHIC')), 'GRAPHIC')
+        result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'TEXT')), 'TEXT')
         result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'LEADPARA')), 'LEADPARA')
         return result_text
         
@@ -81,7 +80,7 @@ class Document(object):
     '''
     def GetSentences(self):
         sentences = sent_tokenize(self.__text)
-        return [sentence for sentence in sentences if len(sentence) > 2]
+        return [sentence for sentence in sentences if len(sentence.split()) >= 2]
     
     def GetPassages(self):
         return self.__passages
