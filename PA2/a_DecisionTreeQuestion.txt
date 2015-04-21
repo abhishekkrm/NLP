@@ -1,0 +1,95 @@
+HUM:gr~What hockey team did Wayne Gretzky play for?
+ENTY:plant~What flower did Vincent Van Gogh paint?
+DESC:def~What is anise?
+ENTY:other~At Christmas time, what is the traditional thing to do under the mistletoe?
+ENTY:sport~What kind of a sports team is the Wisconsin Badgers?
+DESC:def~What is pandoro?
+DESC:def~What is measured in curies?
+ENTY:cremat~What is the name of the Michelangelo painting that shows two hands with fingers touching?
+ENTY:color~What hair color can I use to just cover a little gray?
+DESC:def~What are geckos?
+HUM:ind~Who owns CNN?
+ENTY:product~Can you give me the name of a clock maker in London, England?
+LOC:other~Where did guinea pigs originate?
+DESC:def~What is thalassemia?
+NUM:count~How many home runs did Lou Gehrig have during his career?
+LOC:other~Where did Woodstock take place?
+LOC:country~What nationality was Jackson Pollock?
+LOC:city~Tell me what city the Kentucky Horse Park is near?
+HUM:ind~What famous model was married to Billy Joel?
+NUM:other~What is the population of Ohio?
+LOC:other~What continent is Bolivia on?
+LOC:other~Where are the U.S. headquarters for Procter & Gamble?
+ENTY:dismed~What is the most common kind of skin cancer in the U.S.?
+NUM:date~When was the Hoover Dam constructed?
+HUM:ind~Who coined the term "cyberspace" in his novel "Neuromancer"?
+ABBR:exp~What does CPR stand for?
+ENTY:substance~What is the chemical formula/name for napalm?
+ABBR:exp~What does CNN stand for?
+HUM:ind~Who was Samuel Johnsons's friend and biographer?
+HUM:gr~Who provides telephone service in Orange County, California?
+DESC:def~What is a stratocaster?
+HUM:desc~Who is Henry Butler?
+HUM:ind~Who is the founder of the Wal-Mart stores?
+LOC:other~What's the name of the song Will Smith sings about parents?
+HUM:title~What does Nicholas Cage do for a living?
+ENTY:other~Name one of the Seven Wonders of the Ancient World.
+HUM:gr~What's the name of Pittsburgh's baseball team?
+ENTY:dismed~For what disease is the drug Sinemet used as a treatment?
+LOC:other~Where did Wicca first develop?
+ENTY:other~What is the mascot for Notre Dame University?
+DESC:manner~How did Bob Marley die?
+HUM:ind~Who was the author of the book about computer hackers called "The Cuckoo's Egg: Tracking a Spy Through the Maze of Computer Espionage"?
+HUM:ind~Who reports the weather on the "Good Morning America" television show?
+ENTY:termeq~What is the name of the Jewish alphabet?
+DESC:def~What are the Poconos?
+HUM:gr~What Cruise Line does Kathie Lee Gifford advertise for?
+LOC:other~Where are diamonds mined?
+HUM:gr~What store does Martha Stewart advertise for?
+HUM:ind~Who created "The Muppets"?
+DESC:def~What does hazmat stand for?
+NUM:count~How many months does a normal human pregnancy last?
+ENTY:food~What's the most famous tourist attraction in Rome?
+ENTY:food~What cereal goes "snap, crackle, pop"?
+HUM:ind~Who wrote the song, "Silent Night"?
+NUM:date~What year did Hitler die?
+HUM:ind~Who was Darth Vader's son?
+HUM:ind~Who portrayed Jake in the television show, "Jake and the Fatman"?
+LOC:other~Where is Amsterdam?
+LOC:other~Name a civil war battlefield.
+DESC:reason~What is Black Hills, South Dakota most famous for?
+NUM:date~When was the first Barbie produced?
+DESC:reason~What caused the Lynmouth floods?
+DESC:def~What is the zip code for Fremont, CA?
+ENTY:lang~Name a Gaelic language.
+HUM:desc~Who is Terrence Malick?
+ENTY:other~What's the name of a golf course in Myrtle Beach?
+NUM:date~When was Beethoven born?
+HUM:ind~What's the name of the actress who starred in the movie, "Silence of the Lambs"?
+ENTY:termeq~What's another name for aspartame?
+LOC:state~What state is Niagra Falls located in?
+LOC:other~Where is Venezuela?
+HUM:ind~What is the real name of the singer, Madonna?
+NUM:date~What is Dick Clark's birthday?
+ENTY:veh~Name an American made motorcycle.
+ENTY:cremat~What was the name of the sitcom that Alyssa Milano starred in with Tony Danza?
+HUM:ind~Name a female figure skater.
+ENTY:dismed~What is the name of the vaccine for chicken pox?
+HUM:ind~What is the name of the Lion King's son in the movie, "The Lion King"?
+NUM:date~When was the NFL established?
+HUM:desc~Who was Jane Goodall?
+HUM:gr~What university was Woodrow Wilson President of?
+LOC:state~What province is Edmonton located in?
+ENTY:food~What soft drink contains the largest amount of caffeine?
+NUM:date~When did the California lottery begin?
+DESC:def~What are pomegranates?
+HUM:ind~Who is the monarch of the United Kingdom?
+HUM:ind~Who shot Billy the Kid?
+HUM:ind~Who wrote the song, "Boys of Summer"?
+HUM:ind~Who won the rugby world cup in 1987?
+NUM:date~When was the movie, Caligula, made?
+ENTY:cremat~Name a novel written by John Steinbeck.
+HUM:ind~Who wrote the book, "The Grinch Who Stole Christmas"?
+HUM:gr~What is the name of the company that manufactures the "American Girl" doll collection?
+NUM:date~When was the bar-code invented?
+NUM:code~What is the airport code for Los Angeles International?

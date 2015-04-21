@@ -16,7 +16,6 @@ class AnswerProcessorImpl1(IAnswerProcessor):
 
     def __GetAnswerDesc(self, question):
         desc = AnswerTypeConvertor().AnswerTypeToDescription(question.GetExpectedAnswerType())
-        print (desc)
         return desc
 
     def __ProcessText(self, text):

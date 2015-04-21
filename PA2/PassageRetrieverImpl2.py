@@ -1,7 +1,9 @@
 import operator
 import Utils
+import nltk
 from PassageRetriever import IPassageRetriever
 from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import wordnet as wn
 
 class PassageRetrieverImpl2(IPassageRetriever):
     
@@ -15,17 +17,19 @@ class PassageRetrieverImpl2(IPassageRetriever):
             result_keywords = Utils.RemoveStopwords(text).split()
         return result_keywords
     
+    
     ''' From the list of top documents figures out the n most relevent passages
     '''
-    def GetRelatedPassages(self, question, n=20):
+    def GetRelatedPassages(self, question, n=30):
         # Gather all the passages of all the documents (top documents for the given question) and their similarity score
         docSentences = []
         docSentencesOrg = []
         docSentenceRelevance = {}
         
         # Get Questionkeywords in lowercase
-        question_keywords = [" ".join(self.__GetKeyWordsList(question.GetRawQuestion())).lower()] 
+        question_keywords = [" ".join(self.__GetKeyWordsList(question.GetRawQuestion())).lower()]
         
+
         topDocuments=question.GetTopDocuments()
         
         for document in topDocuments:
