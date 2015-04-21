@@ -14,7 +14,7 @@ stanford_ner_folder = os.path.join(this_file_path, 'stanford-ner-2015-01-30')
 #Creating global - For optimization:
 ner_jar_path = os.path.join(stanford_ner_folder, 'stanford-ner.jar')
 ner_classifier_path = os.path.join(stanford_ner_folder, 'classifiers', 'english.all.7class.distsim.crf.ser.gz') 
-ner_tagger = NERTagger(ner_classifier_path, ner_jar_path)
+ner_tagger = NERTagger(ner_classifier_path, ner_jar_path, encoding='utf-8')
 
 #Taken from https://gist.github.com/alexbowe/879414 
 grammar = r"""
