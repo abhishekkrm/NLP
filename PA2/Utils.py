@@ -5,6 +5,7 @@ from nltk.corpus import stopwords
 from nltk.tag.stanford import NERTagger
 from nltk.util import ngrams
 from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tokenize import RegexpTokenizer
 
 #constants
 this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
@@ -33,13 +34,19 @@ def RemoveStopwords(text):
     textWrods = text.split()
     return ' '.join([word for word in textWrods if word not in stopWordsList])
 
-''' Given a test returns a lemmetized string
+''' Given a text returns a lemmetized string
 '''
 def Lemmatize(text):
     lmtzr = WordNetLemmatizer()
     tokens = nltk.word_tokenize(text)
     return " ".join([lmtzr.lemmatize(token) for token in tokens])
 
+''' Removes punctuation from given text
+'''
+def RemovePunctuation(text):
+    tokenizer = RegexpTokenizer(r'\w+')
+    return ' '.join(tokenizer.tokenize(text))
+    
 ''' Given a list of words returns a list of tuples of type (word, NE tag)
 '''
 def TagNamedEntitiesInList(word_list):
