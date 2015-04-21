@@ -50,12 +50,12 @@ def RemovePunctuation(text):
 ''' Given a list of words returns a list of tuples of type (word, NE tag)
 '''
 def TagNamedEntitiesInList(word_list):
-    return ner_tagger.tag(word_list)
+    return ner_tagger.tag(word_list)[0]
 
 ''' Given a text returns a list of tuples of type (word, NE tag)
 '''
 def TagNamedEntities(text):
-    return TagNamedEntitiesInList(text.split())
+    return TagNamedEntitiesInList(nltk.word_tokenize(text))
 
 ''' Given a text returns a list of tuples of type (word, POS tag)
 '''
