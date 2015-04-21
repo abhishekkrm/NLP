@@ -4,6 +4,7 @@ import re
 from nltk.corpus import stopwords
 from nltk.tag.stanford import NERTagger
 from nltk.util import ngrams
+from nltk.stem.wordnet import WordNetLemmatizer
 
 #constants
 this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
@@ -31,7 +32,14 @@ def RemoveStopwords(text):
     stopWordsList = stopwords.words('english')
     textWrods = text.split()
     return ' '.join([word for word in textWrods if word not in stopWordsList])
- 
+
+def Lemmatize(text):
+    lmtzr = WordNetLemmatizer()
+    tokens = nltk.word_tokenize(text)
+    new_tokens = []
+    for token in tokens:
+        new_tokens.append(lmtzr.lemmatize(token))
+    return " ".join(new_tokens)
 ''' Given a list of words returns a list of tuples of type (word, NE tag)
 '''
 def TagNamedEntitiesInList(word_list):

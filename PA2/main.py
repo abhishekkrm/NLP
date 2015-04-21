@@ -2,7 +2,9 @@ import os
 import Document
 import Utils
 import MLQuestionProcessors
+from TFIDFPassageRetriever import TFIDFPassageRetriever
 from Question import Question
+from AnswerProcessor import NERAnswerProcessor
 
 this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
 
@@ -67,7 +69,7 @@ class Controller(object):
         question.SetExpectedAnswerType(question_processor.GetAnswerType(question))
     
     def __RetrieveReleventPassages(self, question, passage_retriever):
-        pass
+        return passage_retriever.GetRelatedPassages(question,20)
     
     def __ProcessAnswers(self, question, relevent_passages, answer_processor):
         pass
@@ -78,8 +80,15 @@ class Controller(object):
         for _, question in self.__questions.items():
             self.__ProcessQuesion(question, question_processor)
             relevent_passages = self.__RetrieveReleventPassages(question, passage_retriever)
-            candidate_answers = self.__ProcessAnswers(question, relevent_passages, answer_processor)
-            answers[question.GetQuestionNumber()] = candidate_answers
+            
+            print('---------------------------------------')
+            print(question.GetRawQuestion())
+            NERAnswerProcessor().GetAnswers(question, relevent_passages)
+            #for relevent_passage in relevent_passages:
+            #    print(Utils.TagNamedEntities(relevent_passage))
+            print('---------------------------------------')
+            #candidate_answers = self.__ProcessAnswers(question, relevent_passages, answer_processor)
+            #answers[question.GetQuestionNumber()] = candidate_answers
         
         #Let question processor save its information for speedup in next run
         question_processor.DumpInfo()
@@ -111,9 +120,11 @@ class Controller(object):
     ''' As the name suggests for debugging purposes
     '''
     def _Debug(self):
-        dtqp = MLQuestionProcessors.DecisionTreeQuestionProcessor(question_type_training_file_5500)
+        dtqp = MLQuestionProcessors.DecisionTreeQuestionProcessor(question_type_training_file_1000)
+        passage_retriever = TFIDFPassageRetriever()
         for _, question in self.__questions.items():
             print(dtqp.GetAnswerType(question) + '~' + question.GetRawQuestion())
+            print(passage_retriever.GetRelatedPassages(question))
         dtqp.DumpInfo()
         
 def main():
