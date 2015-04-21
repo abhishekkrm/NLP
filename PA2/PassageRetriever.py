@@ -8,3 +8,10 @@ class IPassageRetriever(metaclass=ABCMeta):
     @abc.abstractmethod
     def GetRelatedPassages(self, question, n = 10):
         pass
+    
+    '''
+        GetInfo of class
+    '''
+    @abc.abstractmethod
+    def GetInfo(self):
+        pass

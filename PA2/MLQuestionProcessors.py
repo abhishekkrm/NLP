@@ -35,22 +35,43 @@ class MLQuestionProcessorBase(IQuestionProcessor):
     @abc.abstractmethod
     def GetClassifier(self):
         pass
+
+    @abc.abstractmethod
+    def GetInfo(self):
+        pass
     
 ''' Linear Support Vector Classification
 '''    
 class LinearSVCQuestionProcessor(MLQuestionProcessorBase):
     def GetClassifier(self):
         return LinearSVC()
+    
+    def GetInfo(self):
+        return self.__class__.__name__
 
 ''' Multinomial Naive Bayes Classifier
 '''
 class MultinomialNBQuestionProcessor(MLQuestionProcessorBase):
     def GetClassifier(self):
         return MultinomialNB()
+    
+    def GetInfo(self):
+        return self.__class__.__name__
+
+    def GetQueryKeywords(self, question, listtag={'NN','NNP','NNS','PRP','VBP','VBN','VBG','JJR','JJ','RB','FW'}):
+        text = question.GetRawQuestion()
+        pos_tags = Utils.POSTag(text)
+        result_keywords = [word_tag[0] for word_tag in pos_tags if word_tag[1] in listtag]
+        if len(result_keywords) == 0:
+            result_keywords = Utils.RemoveStopwords(text).split()
+        return result_keywords
 
 ''' Decision Tree Classifier
 '''
 class DecisionTreeQuestionProcessor(MLQuestionProcessorBase):
     def GetClassifier(self):
         return DecisionTreeClassifier()
+    
+    def GetInfo(self):
+        return self.__class__.__name__
     

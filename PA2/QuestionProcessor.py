@@ -17,11 +17,19 @@ class IQuestionProcessor(metaclass=ABCMeta):
     def GetAnswerType(self, question):
         pass
     
+    '''
+        GetInfo of class
+    '''
+    @abc.abstractmethod
+    def GetInfo(self):
+        pass
+    
     ''' Give a chane to the questions processor to write it's answer type classifications/query keywords to a file
         Implementations using slow classifiers may want to use this opportunity to write their classifications once
         and may reuse them for subsequent runs.
         It is not an abstract method and hence its implementation is optional
     '''
+
     def DumpInfo(self):
         pass
     

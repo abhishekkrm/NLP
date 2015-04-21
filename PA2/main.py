@@ -2,8 +2,14 @@ import os
 import Document
 import Utils
 import MLQuestionProcessors
+from PassageRetrieverImpl1 import PassageRetrieverImpl1
 from PassageRetrieverImpl2 import PassageRetrieverImpl2
+from PassageRetrieverImpl3 import PassageRetrieverImpl3
 from Question import Question
+from AnswerProcessorImpl1 import AnswerProcessorImpl1
+from AnswerProcessorImpl2 import AnswerProcessorImpl2
+DEBUG = True
+
 
 this_file_path = os.path.dirname(os.path.realpath(os.path.basename(__file__)))
 
@@ -68,28 +74,45 @@ class Controller(object):
         question.SetExpectedAnswerType(question_processor.GetAnswerType(question))
     
     def __RetrieveReleventPassages(self, question, passage_retriever):
-        return passage_retriever.GetRelatedPassages(question,20)
+        return passage_retriever.GetRelatedPassages(question)
     
     def __ProcessAnswers(self, question, relevent_passages, answer_processor):
         return answer_processor.GetAnswers(question, relevent_passages)
     
-    def GenerateAnswers(self, question_processor, passage_retriever, answer_processor):
+    def GenerateAnswers(self, question_processor, passage_retriever, answer_processor, ans_filename):
         answers = {}
-        
+
         for _, question in self.__questions.items():
             self.__ProcessQuesion(question, question_processor)
+            if DEBUG:
+                print("Question: "+ question.GetRawQuestion())
+                print("AnswerType: " + question.GetExpectedAnswerType())
+                print("Keywords: "+ " ".join(question.GetKeywords()))
             relevent_passages = self.__RetrieveReleventPassages(question, passage_retriever)
+            if DEBUG:
+                print("--------------RelevantPassage--------------")
+                for p in relevent_passages:
+                    print(p[0])
+                    #print(Utils.TagNamedEntities(Utils.RemovePunctuation(p[0])))
+                    #print(p[1])
+                    pass
             candidate_answers = self.__ProcessAnswers(question, relevent_passages, answer_processor)
+            if DEBUG:
+                print('~~~~~~~~~~~~~~~~AnswerList~~~~~~~~~~~~~~~~')
+                for ans in candidate_answers:
+                    print (ans)
+                print ('~~~~~~~~~~~~~~~~Question~~~~~~~~~~~~~~~~')
+            question.SetAnswerList(candidate_answers)
             answers[question.GetQuestionNumber()] = candidate_answers
         
         #Let question processor save its information for speedup in next run
         question_processor.DumpInfo()
-        
+        self.__GenerateAnswerFile(ans_filename)
         return answers
     
     ''' Generates the answer file in a format that evaluation script expects
     '''
-    def GenerateAnswerFile(self, ans_filename):
+    def __GenerateAnswerFile(self, ans_filename):
         with open(ans_filename, "w") as fp:
             for qid, question in self.__questions.items():
                 answer_list = question.GetAnswerList()
@@ -112,18 +135,61 @@ class Controller(object):
     ''' As the name suggests for debugging purposes
     '''
     def _Debug(self):
-        dtqp = MLQuestionProcessors.DecisionTreeQuestionProcessor(question_type_training_file_1000)
+        print("Training")
+        mtqp = MLQuestionProcessors.MultinomialNBQuestionProcessor(question_type_training_file_1000)
+        print("Passage Retreival")
         passage_retriever = PassageRetrieverImpl2()
         for _, question in self.__questions.items():
-            print(dtqp.GetAnswerType(question) + '~' + question.GetRawQuestion())
+            question.SetExpectedAnswerType(mtqp.GetAnswerType(question))
             print(question.GetRawQuestion())
-            print(passage_retriever.GetRelatedPassages(question))
-        dtqp.DumpInfo()
+            print(question.GetExpectedAnswerType())
+            print("--------------------------------")
+            passageList = passage_retriever.GetRelatedPassages(question)
+            for p in passageList:
+                print (p[0])
+                print (p[1])
+            answer_p = AnswerProcessorImpl1()
+            ansList = answer_p.GetAnswers(question, passageList, 20)
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            for ans in ansList:
+                print (ans)
+            print ('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+            
         
 def main():
+
+    if DEBUG:
+        print("Question and Answering System")
     controller = Controller(dev_questions_file, dev_top_docs_folder)
-    #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor)
-    controller._Debug()
+
+    # Can be LinearSVCQuestionProcessor or MultinomialNBQuestionProcessor or DecisionTreeQuestionProcessor
+    question_processor = MLQuestionProcessors.MultinomialNBQuestionProcessor(question_type_training_file_1000)
+    if DEBUG:
+        print("Question Processor: " + question_processor.GetInfo())
+  
+    # Can be PassageRetrieverImpl1 or PassageRetrieverImpl2 or PassageRetrieverImpl3
+    passage_retriever = PassageRetrieverImpl2()    
+    if DEBUG:
+        print("Passage Retreiver: " + passage_retriever.GetInfo())
+
+    # Can be AnswerProcessorImpl1 or AnswerProcessorImpl2
+    answer_processor = AnswerProcessorImpl1()
+    if DEBUG:
+        print("Answer Processor: " + answer_processor.GetInfo())
+    
+    if DEBUG:
+        print("Generating Answers....")
+        print("~~~~~~~~~~~~~~~~Question~~~~~~~~~~~~~~~~")
+    # Generate Answer and write to answer_file
+    controller.GenerateAnswers(question_processor, passage_retriever, answer_processor,answer_file)
+  
+    if DEBUG:
+        print("Evaluating Answers.....")
+    # Validation using Evaluation Script
+    controller.ValidateAnswerFile(validation_script, answers_patterns_file, answer_file)
+    
+    # Debug Function
+    # controller._Debug()
 
 if __name__ == '__main__':
     main()

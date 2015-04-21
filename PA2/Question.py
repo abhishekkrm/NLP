@@ -18,8 +18,8 @@ class Question(object):
     def GetRawQuestion(self):
         return self.__raw_question
     
-    def AddAnswer(self, answer_txt):
-        self.__answer_list.append(answer_txt.strip())
+    def SetAnswerList(self, answerList):
+        self.__answer_list = answerList
     
     def GetAnswerList(self):
         return (self.__answer_list)

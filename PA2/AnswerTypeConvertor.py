@@ -39,9 +39,9 @@ class AnswerTypeConvertor():
         'DESC:manner':[[],'description:manner'],
         'DESC:reason':[[],'description:reasons'],
 
-        'HUM:gr':[['ORGANISATION','PERSON'],'human beings:a group or organization of persons'],
-        'HUM:ind':[['ORGANISATION','PERSON'],'human beings:an individual'],
-        'HUM:title':[['ORGANISATION','PERSON'],'human beings:title of a person'],
+        'HUM:gr':[['ORGANIZATION','PERSON'],'human beings:a group or organization of persons'],
+        'HUM:ind':[['ORGANIZATION','PERSON'],'human beings:an individual'],
+        'HUM:title':[['ORGANIZATION','PERSON'],'human beings:title of a person'],
         'HUM:desc':[[],'human beings:description of a person'],
         
         'LOC:city':[['LOCATION'],'locations:cities'],
@@ -74,7 +74,7 @@ class AnswerTypeConvertor():
         return self.answeryToNerMap[answer_type.strip()][1]
 
 # def main():
-#     answer = AnswerTypeConvertor()
+#     answer = AnswerTypeConvertord()
 #     with open(question_type_training_file_5500) as t_file:
 #         for label_question in t_file:
 #                 answer_type = label_question.strip().split()[0]

@@ -8,3 +8,6 @@ class IAnswerProcessor(metaclass=ABCMeta):
     def GetAnswers(self, question, relevent_passages, num_answers=10):
         pass
     
+    @abc.abstractmethod
+    def GetInfo(self):
+        pass
