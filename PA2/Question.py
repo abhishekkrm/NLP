@@ -22,7 +22,7 @@ class Question(object):
         self.__answer_list = answerList
     
     def GetAnswerList(self):
-        return (self.__answer_list)
+        return self.__answer_list
         
     def SetKeywords(self, keywords):
         self.__keywords = keywords

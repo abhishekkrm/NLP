@@ -1,26 +1,23 @@
 import operator
 import Utils
-import nltk
 from PassageRetriever import IPassageRetriever
 from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.corpus import wordnet as wn
 
 class PassageRetrieverImpl2(IPassageRetriever):
-    
-    def GetInfo(self):
-        return self.__class__.__name__
 
     def __GetKeyWordsList(self, text, listtag={'NN','NNP','NNS','PRP','VBP','VBN','VBG','JJR','JJ','RB','FW'}):
         pos_tags = Utils.POSTag(text)
         result_keywords = [word_tag[0] for word_tag in pos_tags if word_tag[1] in listtag]
+        
         if len(result_keywords) == 0:
             result_keywords = Utils.RemoveStopwords(text).split()
+        
         return result_keywords
     
     
-    ''' From the list of top documents figures out the n most relevent passages
+    ''' From the list of top documents figures out the n most relevent passages and their similarity scores
     '''
-    def GetRelatedPassages(self, question, n=30):
+    def GetRelatedPassages(self, question, n = 10):
         # Gather all the passages of all the documents (top documents for the given question) and their similarity score
         docSentences = []
         docSentencesOrg = []
@@ -29,7 +26,6 @@ class PassageRetrieverImpl2(IPassageRetriever):
         # Get Questionkeywords in lowercase
         question_keywords = [" ".join(self.__GetKeyWordsList(question.GetRawQuestion())).lower()]
         
-
         topDocuments=question.GetTopDocuments()
         
         for document in topDocuments:
@@ -45,8 +41,6 @@ class PassageRetrieverImpl2(IPassageRetriever):
             docSentenceRelevance[docSentencesOrg[i]] = scoreList[i]
             
         sortedSentenceRelevance = sorted(docSentenceRelevance.items(), key=operator.itemgetter(1), reverse=True)
-        relatedPassagesList=[]
-        #print (sortedSentenceRelevance)
-        for i in range(n):
-            relatedPassagesList.append((sortedSentenceRelevance[i][0],sortedSentenceRelevance[i][1]))
-        return relatedPassagesList
+        relatedPassagesList = [(sentence_score[0], sentence_score[1]) for sentence_score in sortedSentenceRelevance]
+
+        return relatedPassagesList[:n]

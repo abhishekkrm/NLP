@@ -3,9 +3,6 @@ from QuestionProcessor import IQuestionProcessor
 from nltk.corpus import wordnet as wn
 
 class TREC9QuestionProcessor(IQuestionProcessor):
-    
-    def GetInfo(self):
-        return self.__class__.__name__
 
     ''' Given a question find out the important keywords in it.
         return a list of keywords

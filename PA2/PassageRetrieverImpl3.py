@@ -4,10 +4,6 @@ from PassageRetriever import IPassageRetriever
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 class PassageRetrieverImpl3(IPassageRetriever):
-    
-    def GetInfo(self):
-        return self.__class__.__name__
-    
     ''' Returns a dictionary of <Sentence> --> <TF-IDF Similarity with the question> for all sentences in document
     '''
     def __GetTFIDFSentenceRelevance(self, document, question):
@@ -34,7 +30,7 @@ class PassageRetrieverImpl3(IPassageRetriever):
     
     ''' From the list of top documents figures out the n most relevent passages
     '''
-    def GetRelatedPassages(self, question, n=20):
+    def GetRelatedPassages(self, question, n = 10):
         # Gather all the sentences of all the documents (top documents for the given question) and their similarity score
         sentenceRelevance={}
         
@@ -44,9 +40,6 @@ class PassageRetrieverImpl3(IPassageRetriever):
             
         # We sort the sentences by relevance
         sortedSentenceRelevance = sorted(sentenceRelevance.items(), key=operator.itemgetter(1), reverse=True)
-        
-        relatedPassages=[]
-        for i in range(n):
-            relatedPassages.append((sortedSentenceRelevance[i][0],sortedSentenceRelevance[i][1]))
-        
-        return relatedPassages
+        relatedPassagesList = [(sentence_score[0], sentence_score[1]) for sentence_score in sortedSentenceRelevance]
+
+        return relatedPassagesList[:n]

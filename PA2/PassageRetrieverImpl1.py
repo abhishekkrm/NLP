@@ -7,9 +7,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 class PassageRetrieverImpl1(IPassageRetriever):
-
-    def GetInfo(self):
-        return self.__class__.__name__
     
     def __ExpandQuestion(self, question_text):
         tokens = nltk.word_tokenize(question_text)
@@ -28,7 +25,7 @@ class PassageRetrieverImpl1(IPassageRetriever):
     
     ''' From the list of top documents figures out the n most relevent passages
     '''                           
-    def GetRelatedPassages(self, question, n=20):
+    def GetRelatedPassages(self, question, n = 10):
         processed_corpus = []
         processed_to_original_sentence_mapping = {}
         
@@ -48,5 +45,5 @@ class PassageRetrieverImpl1(IPassageRetriever):
         similarity_scores = cosine_similarity(tfidf_matrix_train[0:1], tfidf_matrix_train[1:])
         sim_score_processed_sentence_sorted = sorted(zip(similarity_scores[0], processed_corpus[1:]), key=operator.itemgetter(0), reverse=True)
         
-        relevent_passages = [processed_to_original_sentence_mapping[score_sentence[1]] for score_sentence in sim_score_processed_sentence_sorted]
+        relevent_passages = [(processed_to_original_sentence_mapping[score_sentence[1]], score_sentence[0]) for score_sentence in sim_score_processed_sentence_sorted]
         return relevent_passages[:n]
