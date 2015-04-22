@@ -58,7 +58,9 @@ class AnswerProcessorImpl1(IAnswerProcessor):
             pass
 
     def __GetAnswersUsingWordNet(self, question, relevent_passages_and_scores, num_answers):
-        expected_answer_synsets = wn.synsets(self.__GetAnswerDesc(question))
+        expected_answer_synsets = []
+        for answer_description in self.__GetAnswerDesc(question):
+            expected_answer_synsets.extend(wn.synsets(answer_description))
         
         if len(expected_answer_synsets) > 0:
             for passage_and_score in relevent_passages_and_scores:
