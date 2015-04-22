@@ -17,9 +17,10 @@ class Document(object):
         self.__PopulatePassages(document_data)
 
     def __PopulateRankAndScore(self, document_data):
-        rank_and_score = re.findall('Rank:.*Score:.*', document_data)
-        self.__rank = int(re.findall('Rank: \d+', rank_and_score[0])[0].split(':')[1].strip())
-        self.__score = float(re.findall('Score: \d*\.*\d+', rank_and_score[0])[0].split(':')[1].strip())
+        #rank_and_score = re.findall('Rank:.*Score:.*', document_data)
+        #self.__rank = int(re.findall('Rank: \d+', rank_and_score[0])[0].split(':')[1].strip())
+        #self.__score = float(re.findall('Score.? \d*\.*\d+', rank_and_score[0])[0].split(':')[1].strip())
+        pass
     
     def __Stringize(self, segment_list):
         result_text = ''
