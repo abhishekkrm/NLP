@@ -33,6 +33,8 @@ class Document(object):
         result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'SUBJECT')), 'SUBJECT')
         result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'GRAPHIC')), 'GRAPHIC')
         result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'TEXT')), 'TEXT')
+        result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'MEMO')), 'MEMO')
+        result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'DESCRIPT')), 'DESCRIPT')
         result_text += self.__RemoveTag(self.__Stringize(self.__GetTagData(document_data, 'LEADPARA')), 'LEADPARA')
         return result_text
         
