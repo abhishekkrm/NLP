@@ -70,13 +70,13 @@ class Controller(object):
         question.SetKeywords(question_processor.GetQueryKeywords(question))
         question.SetExpectedAnswerType(question_processor.GetAnswerType(question))
     
-    def __RetrieveReleventPassages(self, question, passage_retriever):
-        return passage_retriever.GetRelatedPassages(question)
+    def __RetrieveReleventPassages(self, question, passage_retriever, num_passages):
+        return passage_retriever.GetRelatedPassages(question, num_passages)
     
-    def __ProcessAnswers(self, question, relevent_passages_and_scores, answer_processor):
-        return answer_processor.GetAnswers(question, relevent_passages_and_scores)
+    def __ProcessAnswers(self, question, relevent_passages_and_scores, answer_processor, num_answers):
+        return answer_processor.GetAnswers(question, relevent_passages_and_scores, num_answers)
     
-    def GenerateAnswers(self, question_processor, passage_retriever, answer_processor, ans_filename):
+    def GenerateAnswers(self, question_processor, passage_retrievers, answer_processor, ans_filename):
         answers = {}
 
         for _, question in self.__questions.items():
@@ -85,19 +85,18 @@ class Controller(object):
             self.__ProcessQuesion(question, question_processor)
             print("Question: "+ question.GetRawQuestion())
             print("AnswerType: " + question.GetExpectedAnswerType())
-            print("Keywords: "+ " ".join(question.GetKeywords()))
-
-            relevent_passages_and_scores = self.__RetrieveReleventPassages(question, passage_retriever)
-            print("--------------Relevant Passage And Scores --------------")
-            for passage_and_score in relevent_passages_and_scores:
-                print(passage_and_score[0])
+                        
+            for passage_retriever, num_passages, num_answers in passage_retrievers:
+                relevent_passages_and_scores = self.__RetrieveReleventPassages(question, passage_retriever, num_passages)
+                print("--------------Relevant Passages --------------")
+                for passage_and_score in relevent_passages_and_scores:
+                    print(passage_and_score[0])
+                
+                self.__ProcessAnswers(question, relevent_passages_and_scores, answer_processor, num_answers)
             
-            candidate_answers = self.__ProcessAnswers(question, relevent_passages_and_scores, answer_processor)
             print('~~~~~~~~~~~~~~~~AnswerList~~~~~~~~~~~~~~~~')
-            for answer in candidate_answers:
+            for answer in question.GetAnswerList():
                 print(answer)
-
-            question.SetAnswerList(candidate_answers)
         
         #Let question processor save its information for speedup in next run
         question_processor.DumpInfo()
@@ -157,41 +156,44 @@ class Controller(object):
         
     ''' As the name suggests for debugging purposes
     '''
-    def _Debug(self, question_processor_type, passage_retriever, answer_processor):
-        question =  self._GetQuestion(0)
+    def _Debug(self, question_processor_type, passage_retrievers, answer_processor):
+        question =  self._GetQuestion(69)
         print ('~~~~~~~~~~~~~~~~Question~~~~~~~~~~~~~~~~')
         
         self.__DebugQuestionProcesssor(question, question_processor_type)
         print("Question: "+ question.GetRawQuestion())
         print("AnswerType: " + question.GetExpectedAnswerType())
-        print("Keywords: "+ " ".join(question.GetKeywords()))
- 
-        relevent_passages_and_scores = self.__RetrieveReleventPassages(question, passage_retriever)
-        print("--------------Relevant Passage And Scores --------------")
-        for passage_and_score in relevent_passages_and_scores:
-            print(passage_and_score[0])
-         
-        candidate_answers = self.__ProcessAnswers(question, relevent_passages_and_scores, answer_processor)
+               
+        for passage_retriever, num_passages, num_answers in passage_retrievers:
+            relevent_passages_and_scores = self.__RetrieveReleventPassages(question, passage_retriever, num_passages)
+            print("--------------Relevant Passage And Scores --------------")
+            for passage_and_score in relevent_passages_and_scores:
+                print(passage_and_score[0])
+             
+            self.__ProcessAnswers(question, relevent_passages_and_scores, answer_processor, num_answers)
+        
         print('~~~~~~~~~~~~~~~~AnswerList~~~~~~~~~~~~~~~~')
-        for answer in candidate_answers:
+        for answer in question.GetAnswerList():
             print(answer)
        
 def main():
     controller = Controller(dev_questions_file, dev_top_docs_folder)
 
     # Can be LinearSVCQuestionProcessor or MultinomialNBQuestionProcessor or DecisionTreeQuestionProcessor
-    #question_processor = MLQuestionProcessors.MultinomialNBQuestionProcessor(question_type_training_file_1000)
+    question_processor = MLQuestionProcessors.LinearSVCQuestionProcessor(question_type_training_file_5500)
     
     # Can be PassageRetrieverImpl1 or PassageRetrieverImpl2 or PassageRetrieverImpl3
-    passage_retriever = PassageRetrieverImpl1()    
+    passage_retriever_1 = PassageRetrieverImpl1()    
+    passage_retriever_2 = PassageRetrieverImpl1()
+    passage_retrievers = [(passage_retriever_2, 10, 3), (passage_retriever_1, 50, 7)]
     
     # Can be AnswerProcessorImpl1 or AnswerProcessorImpl2
     answer_processor = AnswerProcessorImpl1()
     
     # Generate Answer and write to answer_file
-    #controller.GenerateAnswers(question_processor, passage_retriever, answer_processor,answer_file)
+    controller.GenerateAnswers(question_processor, passage_retrievers, answer_processor,answer_file)
     
-    controller._Debug(MLQuestionProcessors.MultinomialNBQuestionProcessor, passage_retriever, answer_processor)
+    #controller._Debug(MLQuestionProcessors.LinearSVCQuestionProcessor, passage_retrievers, answer_processor)
 
 
 if __name__ == '__main__':
