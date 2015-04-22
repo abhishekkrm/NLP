@@ -121,8 +121,8 @@ class Controller(object):
     ''' Runs given evaluation.py on answer file 
     '''
     def _ValidateAnswerFile(self, eval_script, ans_pattern_file, ans_file):
-        os.system("chmod +x " + eval_script)
-        os.system("/usr/bin/python3.4 " + eval_script + " " + ans_pattern_file + " " + ans_file)
+        os.system("chmod +x \"" + eval_script + "\"")
+        os.system("/usr/bin/python3.4 \"" + eval_script + "\" \"" + ans_pattern_file + "\" \"" + ans_file + "\"")
     
     ''' Get a question given the questionNo (for testing purposes)
     '''
@@ -205,7 +205,7 @@ def main():
     
     # Can be PassageRetrieverImpl1 or PassageRetrieverImpl2 or PassageRetrieverImpl3
     passage_retriever_1 = PassageRetrieverImpl1()    
-    passage_retriever_2 = PassageRetrieverImpl1()
+    passage_retriever_2 = PassageRetrieverImpl2()
     passage_retrievers = [(passage_retriever_2, 10, 3), (passage_retriever_1, 50, 10)]
     
     # Can be AnswerProcessorImpl1 or AnswerProcessorImpl2
@@ -216,7 +216,7 @@ def main():
     
     #For debugging purposes
     #controller._Debug(MLQuestionProcessors.LinearSVCQuestionProcessor, passage_retrievers, answer_processor)
-
+    
 
 if __name__ == '__main__':
     main()
