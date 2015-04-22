@@ -1,6 +1,8 @@
 import Utils
 import itertools
 import operator
+import re
+import nltk
 import AnswerTypeConvertor
 from AnswerProcessor import IAnswerProcessor
 from nltk.corpus import wordnet as wn
@@ -21,6 +23,11 @@ class AnswerProcessorImpl1(IAnswerProcessor):
     
     def __IsAnswerTypeWordnetRecognizeable(self, question):
         return len(AnswerTypeConvertor.AnswerTypeToDescription(question.GetExpectedAnswerType())) > 0
+    
+    def __IsAnswerNumType(self,question):
+        if self.__IsAnswerTypeNERRecognizeable(question)==False and question.GetExpectedAnswerType().split(":")[0] == 'NUM':
+            return True
+        return False
     
     def __IsTokenInSynsets(self, token, expected_synsets):
         if len(wn.synsets(token)) > 0:
@@ -72,7 +79,18 @@ class AnswerProcessorImpl1(IAnswerProcessor):
                         
                         if len(question.GetAnswerList()) >= num_answers:
                             return
-                        
+
+    def __GetNumTypeAnswers(self, question, relevent_passages_and_scores, num_answers):
+        for passage_and_score in relevent_passages_and_scores:
+            tokens = nltk.word_tokenize(passage_and_score[0])
+            # Regax to match string starting with number
+            regax = re.compile("^\d+.*$")
+            for token in tokens:
+                if regax.match(token):
+                    self.__UpdateAnserList(question,token)
+                    if len(question.GetAnswerList()) >= num_answers:
+                        return
+
 
     def __GetAnswersUsingWordNet(self, question, relevent_passages_and_scores, num_answers):
         expected_answer_synsets = []
@@ -93,7 +111,11 @@ class AnswerProcessorImpl1(IAnswerProcessor):
         
         if self.__IsAnswerTypeWordnetRecognizeable(question):
             self.__GetAnswersUsingWordNet(question, relevent_passages_and_scores, num_answers)
-        
+            
+        if len(question.GetAnswerList()) < num_answers:
+            if self.__IsAnswerNumType(question):
+                self.__GetNumTypeAnswers(question, relevent_passages_and_scores, num_answers)
+                
         if len(question.GetAnswerList()) < num_answers:
             self.__GetRemainingAnswers(question, relevent_passages_and_scores, num_answers)
             
