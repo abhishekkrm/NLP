@@ -45,6 +45,18 @@ class AnswerProcessorImpl1(IAnswerProcessor):
                     
         return list(candidate_answers)
     
+    def __GetAnswersUsingNouns(self, question, relevent_passages_and_scores, num_answers):
+         candidate_answers = set()
+         for passage_and_score in relevent_passages_and_scores:
+             nouns = Utils.GetConsecutiveNouns(passage_and_score[0])
+             for noun in nouns:
+                 if(len(noun.split())>=2):
+                     candidate_answers.add(noun)
+                 if(len(candidate_answers)>=num_answers):
+                     break
+        
+         return list(candidate_answers)
+    
     def __GetAnswersUsingWordNet(self, question, relevent_passages_and_scores, num_answers):
         candidate_answers = set()
         expected_answer_synsets = wn.synsets(self.__GetAnswerDesc(question))
@@ -64,4 +76,14 @@ class AnswerProcessorImpl1(IAnswerProcessor):
             return self.__GetAnswersUsingNER(question, relevent_passages_and_scores, num_answers)
         else:
             return self.__GetAnswersUsingWordNet(question, relevent_passages_and_scores, num_answers)
+        #print("NER answer list : ")
+        
+        
+        #print("Noun answer list : ")
+        #print(self.__GetAnswersUsingNouns(question, relevent_passages_and_scores, num_answers))
+        
+        #print("Wordsense answer list : ")
+        #print(self.__GetAnswersUsingWordNet(question, relevent_passages_and_scores, num_answers))
+        
+        #return self.__GetAnswersUsingNouns(question, relevent_passages_and_scores, num_answers)
     

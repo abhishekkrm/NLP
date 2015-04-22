@@ -183,7 +183,7 @@ def main():
     #question_processor = MLQuestionProcessors.MultinomialNBQuestionProcessor(question_type_training_file_1000)
     
     # Can be PassageRetrieverImpl1 or PassageRetrieverImpl2 or PassageRetrieverImpl3
-    passage_retriever = PassageRetrieverImpl2()    
+    passage_retriever = PassageRetrieverImpl1()    
     
     # Can be AnswerProcessorImpl1 or AnswerProcessorImpl2
     answer_processor = AnswerProcessorImpl1()

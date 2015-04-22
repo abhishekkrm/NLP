@@ -93,3 +93,21 @@ def GetPhrases(text, phrase='NP'):
 def ContainsWholeWord(text, search_word):
     match_object = re.compile(r'\b({0})\b'.format(search_word), re.IGNORECASE).search(text)
     return match_object != None
+
+def GetConsecutiveNouns(text):
+    tokens = nltk.word_tokenize(text)
+    tagged = nltk.pos_tag(tokens)
+    noun_phrase = ""
+    nouns = []
+    #print(tagged)
+    for word,tag in tagged:
+        if(tag.startswith("NN")==True or tag.startswith("IN")==True):
+            if(noun_phrase==""):
+                noun_phrase=word
+            else:
+                noun_phrase+=" "+word
+        else:
+            if(noun_phrase!=""):
+                nouns.append(noun_phrase)
+            noun_phrase=""
+    return nouns
