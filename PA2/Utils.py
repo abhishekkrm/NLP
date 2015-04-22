@@ -1,6 +1,7 @@
 import os
 import nltk
 import re
+import itertools
 from nltk.corpus import stopwords
 from nltk.tag.stanford import NERTagger
 from nltk.util import ngrams
@@ -99,20 +100,14 @@ def ContainsWholeWord(text, search_word):
     match_object = re.compile(r'\b({0})\b'.format(search_word), re.IGNORECASE).search(text)
     return match_object != None
 
+''' Returns a list of consecutive nouns in a given text
+'''
 def GetConsecutiveNouns(text):
-    tokens = nltk.word_tokenize(text)
-    tagged = nltk.pos_tag(tokens)
-    noun_phrase = ""
-    nouns = []
-    #print(tagged)
-    for word,tag in tagged:
-        if(tag.startswith("NN")==True or tag.startswith("IN")==True):
-            if(noun_phrase==""):
-                noun_phrase=word
-            else:
-                noun_phrase+=" "+word
-        else:
-            if(noun_phrase!=""):
-                nouns.append(noun_phrase)
-            noun_phrase=""
-    return nouns
+    consecutive_nouns = []
+    
+    pos_tagged_text = POSTag(text)
+    for is_noun, word_tag_group in itertools.groupby(pos_tagged_text, lambda word_tag: word_tag[1].startswith('NN') or word_tag[1].startswith('IN')):
+        if is_noun:
+            consecutive_nouns.append(' '.join([word_tag[0] for word_tag in word_tag_group]))
+    
+    return consecutive_nouns
