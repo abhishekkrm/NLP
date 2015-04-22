@@ -14,7 +14,7 @@ answeryToNerMap = {
         'ENTY:instru'   :[[],['musical','instrument']],        
         'ENTY:lang'     :[[],['language']],
         'ENTY:letter'   :[[],['alphabet','letters']],
-        'ENTY:other'    :[[],['entities']],
+        'ENTY:other'    :[[],[]],
         'ENTY:plant'    :[[],['plant']],
         'ENTY:product'  :[[],['products']],
         'ENTY:religion' :[[],['religion']],

@@ -107,7 +107,7 @@ class AnswerProcessorImpl1(IAnswerProcessor):
     
     def GetAnswers(self, question, relevent_passages_and_scores, num_answers=10):
         if self.__IsAnswerTypeNERRecognizeable(question):
-            self.__GetAnswersUsingNER(question, relevent_passages_and_scores, num_answers)
+            return self.__GetAnswersUsingNER(question, relevent_passages_and_scores, num_answers)
         
         if self.__IsAnswerTypeWordnetRecognizeable(question):
             self.__GetAnswersUsingWordNet(question, relevent_passages_and_scores, num_answers)
