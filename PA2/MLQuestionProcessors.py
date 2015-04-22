@@ -1,5 +1,6 @@
 import Utils
 import abc
+import re
 from QuestionProcessor import IQuestionProcessor
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.svm import LinearSVC
@@ -29,8 +30,17 @@ class MLQuestionProcessorBase(IQuestionProcessor):
         return self.__classifier.predict(question_vector)[0]
     
     def GetQueryKeywords(self, question):
-        question_text_without_stop_words =  Utils.RemoveStopwords(question.GetRawQuestion())
-        return question_text_without_stop_words.split()
+        listtag = {'NN','NNP','NNS','PRP','VBP','VBN','VBG','JJR','JJ','RB','FW'}
+        text = question.GetRawQuestion()
+        text = re.sub('\?', '', text)
+         
+        pos_tags = Utils.POSTag(text)
+        result_keywords = [word_tag[0] for word_tag in pos_tags if word_tag[1] in listtag]
+        
+        if len(result_keywords) == 0:
+            result_keywords = Utils.RemoveStopwords(text).split()
+        
+        return result_keywords
     
     @abc.abstractmethod
     def GetClassifier(self):
@@ -49,18 +59,6 @@ class LinearSVCQuestionProcessor(MLQuestionProcessorBase):
 class MultinomialNBQuestionProcessor(MLQuestionProcessorBase):
     def GetClassifier(self):
         return MultinomialNB()
-    
-    def GetQueryKeywords(self, question):
-        listtag = {'NN','NNP','NNS','PRP','VBP','VBN','VBG','JJR','JJ','RB','FW'}
-        text = question.GetRawQuestion()
-        
-        pos_tags = Utils.POSTag(text)
-        result_keywords = [word_tag[0] for word_tag in pos_tags if word_tag[1] in listtag]
-        
-        if len(result_keywords) == 0:
-            result_keywords = Utils.RemoveStopwords(text).split()
-        
-        return result_keywords
 
 
 ''' Decision Tree Classifier

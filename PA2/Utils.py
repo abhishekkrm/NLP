@@ -34,12 +34,17 @@ def RemoveStopwords(text):
     textWrods = text.split()
     return ' '.join([word for word in textWrods if word not in stopWordsList])
 
+''' Given a list of tokens returns a list of lemmetized of tokens
+'''
+def LemmatizeTokens(tokens):
+    lmtzr = WordNetLemmatizer()
+    return [lmtzr.lemmatize(token) for token in tokens]
+
 ''' Given a text returns a lemmetized string
 '''
 def Lemmatize(text):
-    lmtzr = WordNetLemmatizer()
     tokens = nltk.word_tokenize(text)
-    return " ".join([lmtzr.lemmatize(token) for token in tokens])
+    return " ".join(LemmatizeTokens(tokens))
 
 ''' Removes punctuation from given text
 '''

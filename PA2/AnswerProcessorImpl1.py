@@ -35,7 +35,7 @@ class AnswerProcessorImpl1(IAnswerProcessor):
     
     def __UpdateAnserList(self, question, answer):
         current_answer_list = question.GetAnswerList()
-        if answer not in current_answer_list and answer not in question.GetRawQuestion():
+        if answer not in current_answer_list and answer.lower() not in question.GetRawQuestion().lower() and answer.strip() != '':
             current_answer_list.append(answer)
             question.SetAnswerList(current_answer_list)
     
@@ -53,9 +53,26 @@ class AnswerProcessorImpl1(IAnswerProcessor):
                         return
     
     def __GetRemainingAnswers(self, question, relevent_passages_and_scores, num_answers):
+        question_keywords = question.GetKeywords()
         for passage_and_score in relevent_passages_and_scores:
-            _ = Utils.GetConsecutiveNouns(passage_and_score[0])
-            pass
+            noun_phrases = Utils.GetPhrases(self.__ProcessText(passage_and_score[0]), 'NP')
+            
+            for index in range(len(noun_phrases)):
+                noun_phrase_constituents = noun_phrases[index].split()
+                noun_phrase_constituents_lower = [np.lower() for np in noun_phrase_constituents]
+                
+                for question_keyword in question_keywords:
+                    if question_keyword.lower() in noun_phrase_constituents_lower:
+                        answer = ' '.join(noun_phrase_constituents[noun_phrase_constituents_lower.index(question_keyword.lower())+1:])
+                        
+                        if answer.strip() != '':
+                            self.__UpdateAnserList(question, answer)
+                        elif index+1 < len(noun_phrases):
+                            self.__UpdateAnserList(question, noun_phrases[index+1])
+                        
+                        if len(question.GetAnswerList()) >= num_answers:
+                            return
+                        
 
     def __GetAnswersUsingWordNet(self, question, relevent_passages_and_scores, num_answers):
         expected_answer_synsets = []
