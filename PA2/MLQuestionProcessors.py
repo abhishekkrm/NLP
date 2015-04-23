@@ -6,6 +6,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import MultinomialNB
+'''
+Training data taken from :
+http://cogcomp.cs.illinois.edu/Data/QA/QC/
+'''
 
 class MLQuestionProcessorBase(IQuestionProcessor):
     def __init__(self, training_file, N_Gram_Range = (2,3)):

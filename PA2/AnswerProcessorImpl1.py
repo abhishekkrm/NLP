@@ -114,7 +114,7 @@ class AnswerProcessorImpl1(IAnswerProcessor):
             
         if len(question.GetAnswerList()) < num_answers:
             if self.__IsAnswerNumType(question):
-                self.__GetNumTypeAnswers(question, relevent_passages_and_scores, num_answers)
+                return self.__GetNumTypeAnswers(question, relevent_passages_and_scores, num_answers)
                 
         if len(question.GetAnswerList()) < num_answers:
             self.__GetRemainingAnswers(question, relevent_passages_and_scores, num_answers)
